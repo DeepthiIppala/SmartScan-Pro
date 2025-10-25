@@ -23,6 +23,8 @@ class Product(db.Model):
     barcode = db.Column(db.String(80), unique=True, nullable=False)
     name = db.Column(db.String(120), nullable=False)
     price = db.Column(db.Float, nullable=False)
+    category = db.Column(db.String(50), nullable=True)
+    description = db.Column(db.Text, nullable=True)
 
 class Cart(db.Model):
     __tablename__ = 'carts'
@@ -43,6 +45,7 @@ class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
+    payment_intent_id = db.Column(db.String(255), nullable=True)  # Stripe payment intent ID
     qr_code = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     items = db.relationship('TransactionItem', backref='transaction', cascade="all, delete-orphan")

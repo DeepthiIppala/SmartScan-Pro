@@ -40,6 +40,8 @@ def create_app(config_class=Config):
                 "products": "/api/products (CRUD operations)",
                 "cart": "/api/cart (cart management)",
                 "transactions": "/api/transactions (checkout, history)",
+                "payments": "/api/payments (Stripe payment processing)",
+                "receipts": "/api/receipts (digital receipt generation)",
                 "ai": "/api/ai (product recognition, chatbot, recommendations, fraud detection)"
             }
         }), 200
@@ -53,6 +55,10 @@ def create_app(config_class=Config):
     app.register_blueprint(cart_bp, url_prefix='/api/cart')
     from .transactions.routes import transactions_bp
     app.register_blueprint(transactions_bp, url_prefix='/api/transactions')
+    from .payments.routes import payment_bp
+    app.register_blueprint(payment_bp, url_prefix='/api/payments')
+    from .receipts.routes import receipt_bp
+    app.register_blueprint(receipt_bp, url_prefix='/api/receipts')
     from .ai.routes import ai_bp
     app.register_blueprint(ai_bp, url_prefix='/api/ai')
     return app

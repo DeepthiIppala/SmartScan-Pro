@@ -2,53 +2,56 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { Cart, Transaction } from '@/lib/types';
+import CheckoutForm from '@/components/CheckoutForm';
 import { api } from '@/lib/api';
+import { Cart } from '@/lib/types';
 import toast from 'react-hot-toast';
-import Image from 'next/image';
 
 export default function CheckoutPage() {
   const [cart, setCart] = useState<Cart | null>(null);
-  const [transaction, setTransaction] = useState<Transaction | null>(null);
+  const [stripePromise, setStripePromise] = useState<any>(null);
+  const [clientSecret, setClientSecret] = useState<string>('');
+  const [paymentIntentId, setPaymentIntentId] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    loadCart();
+    // Load Stripe configuration
+    api.payments.getConfig().then((config) => {
+      setStripePromise(loadStripe(config.publishableKey));
+    });
+
+    // Load cart and create payment intent
+    initializeCheckout();
   }, []);
 
-  const loadCart = async () => {
+  const initializeCheckout = async () => {
     try {
-      const data = await api.cart.get();
-      setCart(data);
+      // Load cart
+      const cartData = await api.cart.get();
 
-      // Redirect if cart is empty
-      if (!data || data.items.length === 0) {
+      if (!cartData || cartData.items.length === 0) {
         toast.error('Your cart is empty');
-        router.push('/products');
+        router.push('/cart');
+        return;
       }
+
+      setCart(cartData);
+
+      // Create payment intent
+      const paymentIntent = await api.payments.createPaymentIntent();
+      setClientSecret(paymentIntent.client_secret);
+      setPaymentIntentId(paymentIntent.payment_intent_id);
+
     } catch (error) {
-      toast.error('Failed to load cart');
-      console.error(error);
+      console.error('Checkout initialization failed:', error);
+      toast.error('Failed to initialize checkout');
       router.push('/cart');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCheckout = async () => {
-    setProcessing(true);
-    try {
-      const result = await api.transactions.checkout();
-      setTransaction(result);
-      toast.success('Order completed successfully!');
-    } catch (error) {
-      toast.error('Checkout failed. Please try again.');
-      console.error(error);
-    } finally {
-      setProcessing(false);
     }
   };
 
@@ -57,161 +60,88 @@ export default function CheckoutPage() {
     0
   ) || 0;
 
-  if (loading) {
-    return (
-      <ProtectedRoute>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center py-12">
-            <p className="text-gray-500">Loading...</p>
-          </div>
-        </div>
-      </ProtectedRoute>
-    );
-  }
-
-  if (transaction) {
-    return (
-      <ProtectedRoute>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="text-center mb-8">
-              <div className="mb-4">
-                <svg
-                  className="mx-auto h-16 w-16 text-green-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Order Completed!
-              </h1>
-              <p className="text-gray-600">
-                Thank you for your purchase. Your order has been processed successfully.
-              </p>
-            </div>
-
-            {/* Order Summary */}
-            <div className="border-t border-b border-gray-200 py-6 mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Order ID:</span>
-                <span className="font-semibold">#{transaction.id}</span>
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Total Items:</span>
-                <span className="font-semibold">
-                  {transaction.items.reduce((sum, item) => sum + item.quantity, 0)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold text-gray-800">Total Amount:</span>
-                <span className="text-2xl font-bold text-green-600">
-                  ${transaction.total_amount.toFixed(2)}
-                </span>
-              </div>
-            </div>
-
-            {/* QR Code */}
-            <div className="text-center mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Payment QR Code
-              </h2>
-              <p className="text-sm text-gray-600 mb-4">
-                Scan this QR code to complete your payment
-              </p>
-              <div className="inline-block p-4 bg-white border-2 border-gray-300 rounded-lg">
-                {transaction.qr_code && (
-                  <Image
-                    src={transaction.qr_code}
-                    alt="Payment QR Code"
-                    width={256}
-                    height={256}
-                    className="mx-auto"
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-4">
-              <button
-                onClick={() => router.push('/history')}
-                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                View Order History
-              </button>
-              <button
-                onClick={() => router.push('/products')}
-                className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
-              >
-                Continue Shopping
-              </button>
-            </div>
-          </div>
-        </div>
-      </ProtectedRoute>
-    );
-  }
+  const appearance = {
+    theme: 'night' as const,
+    variables: {
+      colorPrimary: '#10b981',
+      colorBackground: '#1f2937',
+      colorText: '#ffffff',
+      colorDanger: '#ef4444',
+      fontFamily: 'system-ui, sans-serif',
+      spacingUnit: '4px',
+      borderRadius: '8px',
+    },
+  };
 
   return (
     <ProtectedRoute>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
+        <h1 className="text-3xl font-bold text-white mb-8">Checkout</h1>
 
-        {cart && (
-          <div className="space-y-6">
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-400">Loading checkout...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Order Summary */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Order Summary
-              </h2>
-              <div className="space-y-3">
-                {cart.items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center">
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">{item.product.name}</p>
-                      <p className="text-sm text-gray-500">
-                        ${item.product.price.toFixed(2)} × {item.quantity}
-                      </p>
-                    </div>
-                    <p className="font-semibold text-gray-900">
+            <div className="bg-gray-800 p-6 rounded-lg shadow border border-gray-700 h-fit">
+              <h2 className="text-xl font-bold text-white mb-4">Order Summary</h2>
+
+              <div className="space-y-3 mb-6">
+                {cart?.items.map((item) => (
+                  <div key={item.id} className="flex justify-between text-sm">
+                    <span className="text-gray-300">
+                      {item.product.name} x {item.quantity}
+                    </span>
+                    <span className="text-white font-semibold">
                       ${(item.product.price * item.quantity).toFixed(2)}
-                    </p>
+                    </span>
                   </div>
                 ))}
               </div>
-              <div className="border-t mt-4 pt-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold text-gray-800">Total:</span>
-                  <span className="text-2xl font-bold text-green-600">
-                    ${cartTotal.toFixed(2)}
-                  </span>
+
+              <div className="border-t border-gray-700 pt-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-400">Subtotal</span>
+                  <span className="text-white">${cartTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-400">Tax (0%)</span>
+                  <span className="text-white">$0.00</span>
+                </div>
+                <div className="flex justify-between items-center text-lg font-bold border-t border-gray-700 pt-4 mt-4">
+                  <span className="text-white">Total</span>
+                  <span className="text-green-400">${cartTotal.toFixed(2)}</span>
                 </div>
               </div>
-            </div>
 
-            {/* Checkout Button */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <button
-                onClick={handleCheckout}
-                disabled={processing}
-                className="w-full px-6 py-4 bg-green-600 text-white text-lg font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-green-300"
-              >
-                {processing ? 'Processing...' : 'Complete Order'}
-              </button>
               <button
                 onClick={() => router.push('/cart')}
-                className="w-full mt-3 px-6 py-3 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                className="w-full mt-6 px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors"
               >
                 Back to Cart
               </button>
+            </div>
+
+            {/* Payment Form */}
+            <div className="bg-gray-800 p-6 rounded-lg shadow border border-gray-700">
+              <h2 className="text-xl font-bold text-white mb-6">Payment Details</h2>
+
+              {stripePromise && clientSecret && (
+                <Elements
+                  stripe={stripePromise}
+                  options={{
+                    clientSecret,
+                    appearance,
+                  }}
+                >
+                  <CheckoutForm
+                    paymentIntentId={paymentIntentId}
+                    amount={cartTotal}
+                  />
+                </Elements>
+              )}
             </div>
           </div>
         )}

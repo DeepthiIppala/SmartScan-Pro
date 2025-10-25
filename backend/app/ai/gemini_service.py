@@ -12,9 +12,9 @@ class GeminiService:
 
         genai.configure(api_key=api_key)
 
-        # Initialize models
-        self.vision_model = genai.GenerativeModel('gemini-2.0-flash-exp')
-        self.text_model = genai.GenerativeModel('gemini-1.5-flash')
+        # Initialize models - using stable Gemini 2.5 Flash (fast, multimodal, supports vision)
+        self.vision_model = genai.GenerativeModel('gemini-2.5-flash')
+        self.text_model = genai.GenerativeModel('gemini-2.5-flash')
 
     def recognize_product(self, image_data):
         """
@@ -83,29 +83,89 @@ class GeminiService:
         except Exception as e:
             raise Exception(f"Chat assistant failed: {str(e)}")
 
+    def visual_product_search(self, image_data, available_products):
+        """
+        AI Feature: Visual Product Search
+        Upload any photo and find similar products in store inventory
+        """
+        try:
+            import base64
+            from PIL import Image
+            import io
+
+            # Decode base64 image
+            image_bytes = base64.b64decode(image_data.split(',')[1] if ',' in image_data else image_data)
+            image = Image.open(io.BytesIO(image_bytes))
+
+            # Build product catalog for AI
+            product_list = "\n".join([
+                f"- {p['name']} (${p['price']}) - Category: {p.get('category', 'General')}"
+                for p in available_products
+            ])
+
+            prompt = f"""Analyze this image and find similar or matching products from this store inventory.
+
+            AVAILABLE PRODUCTS:
+            {product_list}
+
+            Your task:
+            1. Identify the main item(s) in the image (clothing, accessories, home goods, etc.)
+            2. Match them to similar products in the inventory
+            3. Rank matches by similarity (exact match, similar style, same category, etc.)
+
+            Return results as JSON with NO markdown formatting:
+            {{
+                "identified_item": "description of item in photo",
+                "matches": [
+                    {{
+                        "product_name": "exact product name from inventory",
+                        "match_reason": "why this matches (exact/similar style/same category)",
+                        "confidence": 0.95
+                    }}
+                ],
+                "search_tips": "if no good matches, suggest what to search for"
+            }}
+
+            Focus on finding the BEST matches. If there are no similar products, suggest the closest category."""
+
+            response = self.vision_model.generate_content([prompt, image])
+            return response.text
+
+        except Exception as e:
+            raise Exception(f"Visual search failed: {str(e)}")
+
     def generate_recommendations(self, user_history, current_cart=None):
         """
         AI Feature 4: Smart Recommendations
         Generates personalized product recommendations based on shopping history and current cart
         """
         try:
-            prompt = f"""You are a smart recommendation engine for a grocery store.
+            # Build context about current cart
+            cart_context = "Empty cart" if not current_cart or len(current_cart) == 0 else f"Current cart has: {current_cart}"
 
-            User's shopping history: {user_history}
-            Current cart items: {current_cart if current_cart else 'Empty'}
+            prompt = f"""You are a smart recommendation engine for a retail store.
+
+            CURRENT SHOPPING SESSION (PRIORITY):
+            {cart_context}
+
+            User's past shopping history: {user_history if user_history else 'No history'}
+
+            IMPORTANT: Recommend products that go well with what's CURRENTLY IN THE CART.
+            If the cart has clothing items, recommend clothing accessories.
+            If the cart has food items, recommend complementary food items.
 
             Based on this data, suggest 3-5 products the user might want to buy.
             Consider:
+            - Items that complement what's currently in the cart (HIGHEST PRIORITY)
             - Frequently bought together items
-            - Complementary products
-            - Similar items they've purchased before
-            - Seasonal relevance
+            - Matching accessories or related products
+            - Similar category items
 
-            Respond in JSON format:
+            Respond ONLY in this exact JSON format (no markdown, no code blocks):
             {{
                 "recommendations": [
                     {{"product": "Product Name", "reason": "why recommend this"}},
-                    ...
+                    {{"product": "Another Product", "reason": "why recommend this"}}
                 ]
             }}
             """

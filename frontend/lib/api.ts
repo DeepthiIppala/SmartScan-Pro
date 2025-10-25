@@ -226,6 +226,55 @@ export const aiAPI = {
       body: JSON.stringify({ scan_data: scanData, behavior }),
     }, true);
   },
+
+  async visualSearch(imageData: string): Promise<any> {
+    return apiFetch<any>('/ai/visual-search', {
+      method: 'POST',
+      body: JSON.stringify({ image: imageData }),
+    }, true);
+  },
+};
+
+// Payments API
+export const paymentsAPI = {
+  async getConfig(): Promise<{ publishableKey: string }> {
+    return apiFetch<{ publishableKey: string }>('/payments/config', {
+      method: 'GET',
+    });
+  },
+
+  async createPaymentIntent(): Promise<{
+    client_secret: string;
+    payment_intent_id: string;
+    amount: number;
+    status: string;
+  }> {
+    return apiFetch('/payments/create-payment-intent', {
+      method: 'POST',
+    }, true);
+  },
+
+  async confirmPayment(paymentIntentId: string): Promise<{
+    message: string;
+    transaction_id: number;
+    total_amount: number;
+  }> {
+    return apiFetch('/payments/confirm-payment', {
+      method: 'POST',
+      body: JSON.stringify({ payment_intent_id: paymentIntentId }),
+    }, true);
+  },
+
+  async refund(transactionId: number): Promise<{
+    message: string;
+    refund_id: string;
+    amount: number;
+  }> {
+    return apiFetch('/payments/refund', {
+      method: 'POST',
+      body: JSON.stringify({ transaction_id: transactionId }),
+    }, true);
+  },
 };
 
 // Export all APIs as a single object
@@ -235,4 +284,5 @@ export const api = {
   cart: cartAPI,
   transactions: transactionsAPI,
   ai: aiAPI,
+  payments: paymentsAPI,
 };

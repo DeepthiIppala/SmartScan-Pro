@@ -57,6 +57,78 @@ def recognize_product():
         return jsonify({"error": str(e)}), 500
 
 
+@ai_bp.route('/visual-search', methods=['POST'])
+@jwt_required()
+def visual_search():
+    """
+    AI Feature: Visual Product Search
+    POST /api/ai/visual-search
+    Body: { "image": "base64_encoded_image_data" }
+    Upload ANY photo and find similar products in inventory
+    """
+    if not gemini:
+        return jsonify({"error": "AI service not configured. Please set GEMINI_API_KEY"}), 503
+
+    try:
+        data = request.get_json()
+        image_data = data.get('image')
+
+        if not image_data:
+            return jsonify({"error": "No image data provided"}), 400
+
+        # Get all available products
+        products = Product.query.all()
+        product_list = [
+            {
+                "id": p.id,
+                "name": p.name,
+                "price": p.price,
+                "category": p.category,
+                "barcode": p.barcode
+            }
+            for p in products
+        ]
+
+        # Call Gemini Visual Search
+        result = gemini.visual_product_search(image_data, product_list)
+
+        # Clean up markdown formatting if present
+        if '```json' in result:
+            result = result.split('```json')[1].split('```')[0].strip()
+        elif '```' in result:
+            result = result.split('```')[1].split('```')[0].strip()
+
+        search_results = json.loads(result)
+
+        # Enrich matches with full product data
+        if 'matches' in search_results:
+            enriched_matches = []
+            for match in search_results['matches']:
+                # Find the actual product
+                product = next(
+                    (p for p in products if p.name == match['product_name']),
+                    None
+                )
+                if product:
+                    enriched_matches.append({
+                        "id": product.id,
+                        "name": product.name,
+                        "price": product.price,
+                        "category": product.category,
+                        "barcode": product.barcode,
+                        "match_reason": match.get('match_reason', ''),
+                        "confidence": match.get('confidence', 0.0)
+                    })
+            search_results['matches'] = enriched_matches
+
+        return jsonify(search_results), 200
+
+    except json.JSONDecodeError as e:
+        return jsonify({"error": f"Failed to parse AI response: {str(e)}", "raw_response": result}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @ai_bp.route('/chat', methods=['POST'])
 @jwt_required()
 def chat():
@@ -113,11 +185,20 @@ def get_recommendations():
                     "price": item.price_at_purchase
                 })
 
-        # Get current cart (optional - could pass cart items)
-        current_cart = request.args.get('cart', None)
+        # Get current cart items
+        from ..models import Cart
+        cart = Cart.query.filter_by(user_id=user_id).first()
+        current_cart_items = []
+        if cart and cart.items:
+            for item in cart.items:
+                current_cart_items.append({
+                    "product": item.product.name,
+                    "quantity": item.quantity,
+                    "price": item.product.price
+                })
 
         # Generate recommendations
-        result = gemini.generate_recommendations(history_summary, current_cart)
+        result = gemini.generate_recommendations(history_summary, current_cart_items)
 
         # Parse JSON response
         try:

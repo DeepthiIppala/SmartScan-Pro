@@ -3,14 +3,25 @@
 import { useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '@/lib/api';
+import { Product } from '@/lib/types';
 
 interface AIProductRecognitionProps {
   onProductRecognized: (productData: any) => void;
 }
 
+interface RecognizedProduct {
+  product_name: string;
+  confidence: number;
+  category?: string;
+  description?: string;
+}
+
 export default function AIProductRecognition({ onProductRecognized }: AIProductRecognitionProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [recognizedProduct, setRecognizedProduct] = useState<RecognizedProduct | null>(null);
+  const [matchedProducts, setMatchedProducts] = useState<Product[]>([]);
+  const [searchingDatabase, setSearchingDatabase] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -73,14 +84,71 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
     }
   };
 
+  const searchDatabaseForProduct = async (productName: string) => {
+    setSearchingDatabase(true);
+    try {
+      // Get all products from database
+      const allProducts = await api.products.getAll();
+
+      // Extract keywords from AI-recognized product name
+      const keywords = productName.toLowerCase().split(/[\s-]+/).filter(word => word.length > 2);
+
+      // Search for products that match the AI-recognized name
+      const matches = allProducts.filter(product => {
+        const dbProductLower = product.name.toLowerCase();
+        const aiProductLower = productName.toLowerCase();
+
+        // Direct substring match
+        if (dbProductLower.includes(aiProductLower) || aiProductLower.includes(dbProductLower)) {
+          return true;
+        }
+
+        // Keyword matching - if product contains any significant keyword from AI result
+        const keywordMatches = keywords.filter(keyword =>
+          dbProductLower.includes(keyword)
+        );
+
+        // If at least one significant keyword matches, include it
+        return keywordMatches.length > 0;
+      });
+
+      // Sort matches by relevance (more keyword matches = higher priority)
+      const sortedMatches = matches.sort((a, b) => {
+        const aMatches = keywords.filter(kw => a.name.toLowerCase().includes(kw)).length;
+        const bMatches = keywords.filter(kw => b.name.toLowerCase().includes(kw)).length;
+        return bMatches - aMatches;
+      });
+
+      setMatchedProducts(sortedMatches);
+
+      if (sortedMatches.length === 0) {
+        toast('Product identified but not found in database. Please add it manually or use barcode.', {
+          icon: '⚠️',
+          duration: 5000
+        });
+      }
+    } catch (error) {
+      console.error('Database search failed', error);
+    } finally {
+      setSearchingDatabase(false);
+    }
+  };
+
   const processImage = async (imageData: string) => {
     setIsProcessing(true);
+    setRecognizedProduct(null);
+    setMatchedProducts([]);
+
     try {
       const result = await api.ai.recognizeProduct(imageData);
 
       if (result.confidence >= 0.7) {
-        toast.success(`Product identified: ${result.product_name}`);
+        setRecognizedProduct(result);
+        toast.success(`AI identified: ${result.product_name}!`);
         onProductRecognized(result);
+
+        // Search database for matching products
+        await searchDatabaseForProduct(result.product_name);
       } else {
         toast.error('Could not identify product with high confidence. Please try again or use barcode scanner.');
       }
@@ -90,6 +158,23 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleAddToCart = async (product: Product) => {
+    try {
+      await api.cart.addItem(product.barcode, 1);
+      toast.success(`Added ${product.name} to cart!`);
+      setRecognizedProduct(null);
+      setMatchedProducts([]);
+    } catch (error) {
+      toast.error('Failed to add to cart');
+      console.error(error);
+    }
+  };
+
+  const clearResults = () => {
+    setRecognizedProduct(null);
+    setMatchedProducts([]);
   };
 
   return (
@@ -163,6 +248,74 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
         <div className="mt-4 text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
           <p className="text-sm text-gray-300 mt-2">AI is analyzing the image...</p>
+        </div>
+      )}
+
+      {/* AI Recognition Results */}
+      {recognizedProduct && (
+        <div className="mt-4 bg-gradient-to-r from-purple-900 to-indigo-900 border border-purple-500 rounded-lg p-4">
+          <div className="flex justify-between items-start mb-3">
+            <div>
+              <h3 className="text-lg font-bold text-white mb-1">AI Identified:</h3>
+              <p className="text-xl font-semibold text-purple-300">{recognizedProduct.product_name}</p>
+              <p className="text-sm text-gray-300 mt-1">
+                Confidence: {(recognizedProduct.confidence * 100).toFixed(0)}%
+              </p>
+              {recognizedProduct.category && (
+                <p className="text-sm text-gray-400">Category: {recognizedProduct.category}</p>
+              )}
+              {recognizedProduct.description && (
+                <p className="text-sm text-gray-400 mt-1">{recognizedProduct.description}</p>
+              )}
+            </div>
+            <button
+              onClick={clearResults}
+              className="text-gray-400 hover:text-white text-xl"
+              title="Clear results"
+            >
+              ×
+            </button>
+          </div>
+
+          {searchingDatabase ? (
+            <div className="text-center py-3">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400"></div>
+              <p className="text-sm text-gray-300 mt-2">Searching database...</p>
+            </div>
+          ) : matchedProducts.length > 0 ? (
+            <div>
+              <h4 className="text-md font-semibold text-white mb-2">
+                Found {matchedProducts.length} matching product{matchedProducts.length > 1 ? 's' : ''} in database:
+              </h4>
+              <div className="space-y-2">
+                {matchedProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="bg-gray-800 border border-gray-700 rounded p-3 flex justify-between items-center"
+                  >
+                    <div>
+                      <p className="font-semibold text-white">{product.name}</p>
+                      <p className="text-sm text-gray-400">Barcode: {product.barcode}</p>
+                      <p className="text-lg font-bold text-green-400 mt-1">${product.price.toFixed(2)}</p>
+                    </div>
+                    <button
+                      onClick={() => handleAddToCart(product)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold"
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="bg-yellow-900 border border-yellow-600 rounded p-3 text-center">
+              <p className="text-yellow-200 font-semibold">Product not found in database</p>
+              <p className="text-sm text-yellow-300 mt-1">
+                This product needs to be added to the database with a barcode and price first.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

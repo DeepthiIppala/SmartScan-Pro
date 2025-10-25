@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import BarcodeScanner from '@/components/BarcodeScanner';
 import AIProductRecognition from '@/components/AIProductRecognition';
+import AIVisualSearch from '@/components/AIVisualSearch';
 import ProductCard from '@/components/ProductCard';
 import { Product } from '@/lib/types';
 import { api } from '@/lib/api';
@@ -120,6 +121,9 @@ export default function ProductsPage() {
 
         {/* AI Product Recognition */}
         <AIProductRecognition onProductRecognized={handleAIProductRecognized} />
+
+        {/* AI Visual Search */}
+        <AIVisualSearch />
 
         {/* Product Grid */}
         <div>
