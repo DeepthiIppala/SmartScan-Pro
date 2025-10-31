@@ -80,8 +80,8 @@ export default function ProductsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white">Products</h1>
-            <p className="mt-2 text-sm text-gray-300">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Products</h1>
+            <p className="mt-2 text-base text-gray-700 dark:text-gray-100 font-medium">
               Welcome, {user?.email}! Scan or browse products to add to your cart.
             </p>
           </div>
@@ -127,14 +127,14 @@ export default function ProductsPage() {
 
         {/* Product Grid */}
         <div>
-          <h2 className="text-2xl font-bold text-white mb-4">All Products</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">All Products</h2>
           {loading ? (
             <div className="text-center py-12">
-              <p className="text-gray-300">Loading products...</p>
+              <p className="text-gray-600 dark:text-gray-300">Loading products...</p>
             </div>
           ) : products.length === 0 ? (
-            <div className="bg-gray-800 shadow rounded-lg p-6 border border-gray-700">
-              <p className="text-gray-300 text-center">
+            <div className="bg-gray-100 dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-300 dark:border-gray-700">
+              <p className="text-gray-600 dark:text-gray-300 text-center">
                 No products available. Contact admin to add products.
               </p>
             </div>

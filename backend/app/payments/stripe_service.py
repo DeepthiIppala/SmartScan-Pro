@@ -30,6 +30,8 @@ class StripeService:
             # Convert dollars to cents (Stripe uses smallest currency unit)
             amount_cents = int(amount * 100)
 
+            print(f"[DEBUG] Creating Stripe payment intent for {amount_cents} cents")
+
             # Create payment intent
             payment_intent = stripe.PaymentIntent.create(
                 amount=amount_cents,
@@ -40,6 +42,14 @@ class StripeService:
                 },
             )
 
+            print(f"[DEBUG] Stripe payment intent created: {payment_intent.id if hasattr(payment_intent, 'id') else 'NO ID'}")
+
+            # Check if payment_intent has required attributes
+            if not hasattr(payment_intent, 'id'):
+                raise Exception("Payment intent missing 'id' attribute")
+            if not hasattr(payment_intent, 'client_secret'):
+                raise Exception("Payment intent missing 'client_secret' attribute")
+
             return {
                 'client_secret': payment_intent.client_secret,
                 'payment_intent_id': payment_intent.id,
@@ -47,7 +57,11 @@ class StripeService:
                 'status': payment_intent.status
             }
         except stripe.error.StripeError as e:
+            print(f"[ERROR] Stripe error: {str(e)}")
             raise Exception(f"Stripe error: {str(e)}")
+        except Exception as e:
+            print(f"[ERROR] Payment intent creation error: {str(e)}")
+            raise
 
     def confirm_payment(self, payment_intent_id):
         """

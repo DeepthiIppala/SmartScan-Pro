@@ -68,8 +68,8 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
   }, [scanner]);
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
-      <h3 className="text-lg font-semibold mb-4 text-white">Scan Product</h3>
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Scan Product</h3>
 
       {/* Manual Input */}
       <form onSubmit={handleManualSubmit} className="mb-4">
@@ -79,7 +79,7 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
             placeholder="Enter barcode manually"
             value={manualBarcode}
             onChange={(e) => setManualBarcode(e.target.value)}
-            className="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             type="submit"
@@ -91,7 +91,7 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
       </form>
 
       {/* Camera Scanner */}
-      <div className="border-t border-gray-700 pt-4">
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
         {!isScanning ? (
           <button
             onClick={startScanner}

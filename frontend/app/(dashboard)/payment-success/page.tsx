@@ -95,6 +95,33 @@ export default function PaymentSuccessPage() {
                 </div>
               </div>
 
+              {/* EXIT PASS QR CODE */}
+              {transaction.qr_code && (
+                <div className="mb-6 bg-gradient-to-br from-green-900 to-emerald-900 border-2 border-green-500 rounded-lg p-6 text-center">
+                  <div className="mb-4">
+                    <h2 className="text-2xl font-bold text-white mb-2">
+                      🎫 EXIT PASS
+                    </h2>
+                    <p className="text-green-200 text-sm">
+                      Show this QR code to security when leaving the store
+                    </p>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-lg inline-block mb-4">
+                    <img
+                      src={transaction.qr_code}
+                      alt="Exit Pass QR Code"
+                      className="w-64 h-64 mx-auto"
+                    />
+                  </div>
+
+                  <div className="text-white text-sm space-y-1">
+                    <p className="font-semibold">✓ Payment Verified</p>
+                    <p className="text-green-300">Order #{transaction.id} - {transaction.items.reduce((sum, item) => sum + item.quantity, 0)} items</p>
+                  </div>
+                </div>
+              )}
+
               {/* Items List */}
               <div className="mb-6">
                 <h2 className="text-xl font-bold text-white mb-4">Order Items</h2>
