@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -18,6 +18,7 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [cartItemCount, setCartItemCount] = useState(0);
+  const processingBarcodeRef = useRef<string | null>(null);
 
   useEffect(() => {
     loadProducts();
@@ -47,6 +48,15 @@ export default function ProductsPage() {
   };
 
   const handleScan = async (barcode: string) => {
+    // Prevent duplicate processing of the same barcode
+    if (processingBarcodeRef.current === barcode) {
+      console.log('Already processing this barcode, ignoring duplicate');
+      return;
+    }
+
+    // Mark this barcode as being processed
+    processingBarcodeRef.current = barcode;
+
     try {
       const product = await api.products.getByBarcode(barcode);
       await api.cart.addItem(barcode, 1);
@@ -55,6 +65,11 @@ export default function ProductsPage() {
     } catch (error) {
       toast.error('Product not found or failed to add to cart');
       console.error(error);
+    } finally {
+      // Reset after 2 seconds to allow rescanning the same item
+      setTimeout(() => {
+        processingBarcodeRef.current = null;
+      }, 2000);
     }
   };
 

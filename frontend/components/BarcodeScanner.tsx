@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { useState, useEffect, useRef } from 'react';
+import { BrowserMultiFormatReader } from '@zxing/browser';
+import { DecodeHintType, BarcodeFormat } from '@zxing/library';
+import toast from 'react-hot-toast';
 
 interface BarcodeScannerProps {
   onScan: (barcode: string) => void;
@@ -10,43 +12,132 @@ interface BarcodeScannerProps {
 export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
   const [manualBarcode, setManualBarcode] = useState('');
   const [isScanning, setIsScanning] = useState(false);
-  const [scanner, setScanner] = useState<Html5QrcodeScanner | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
+  const lastScannedRef = useRef<string | null>(null);
+  const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasCalledOnScanRef = useRef(false);
 
-  const startScanner = () => {
+  const playBeep = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (error) {
+      console.log('Could not play beep:', error);
+    }
+  };
+
+  const startScanner = async () => {
     if (isScanning) return;
 
-    setIsScanning(true);
+    try {
+      setIsScanning(true);
 
-    // Wait for DOM to render the element
-    setTimeout(() => {
-      const html5QrcodeScanner = new Html5QrcodeScanner(
-        'barcode-reader',
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-        },
-        false
-      );
+      // Wait for video element to render
+      await new Promise(resolve => setTimeout(resolve, 100));
 
-      html5QrcodeScanner.render(
-        (decodedText) => {
-          onScan(decodedText);
-          stopScanner();
-        },
-        (error) => {
-          // Ignore errors - they're just scan failures
+      if (!videoRef.current) {
+        setIsScanning(false);
+        toast.error('Video element not ready');
+        return;
+      }
+
+      // Enable all barcode formats for maximum compatibility
+      const hints = new Map();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.QR_CODE,
+        BarcodeFormat.DATA_MATRIX,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.CODE_93,
+        BarcodeFormat.CODABAR,
+        BarcodeFormat.ITF,
+        BarcodeFormat.RSS_14,
+        BarcodeFormat.PDF_417,
+      ]);
+      hints.set(DecodeHintType.TRY_HARDER, true);
+
+      const codeReader = new BrowserMultiFormatReader(hints);
+      codeReaderRef.current = codeReader;
+
+      await codeReader.decodeFromVideoDevice(
+        undefined, // Use default camera
+        videoRef.current,
+        (result, error) => {
+          if (result) {
+            const barcode = result.getText();
+
+            // Triple protection against duplicates
+            if (lastScannedRef.current === barcode || hasCalledOnScanRef.current) {
+              return;
+            }
+
+            // Immediately mark as scanned to prevent duplicates
+            lastScannedRef.current = barcode;
+            hasCalledOnScanRef.current = true;
+
+            // Stop scanner immediately to prevent more scans
+            stopScanner();
+
+            // Play beep sound
+            playBeep();
+
+            // Show success toast
+            toast.success(`Scanned: ${barcode}`);
+
+            // Call the onScan callback ONCE
+            onScan(barcode);
+
+            // Clear previous timeout if exists
+            if (scanTimeoutRef.current) {
+              clearTimeout(scanTimeoutRef.current);
+            }
+
+            // Reset after 3 seconds to allow rescanning
+            scanTimeoutRef.current = setTimeout(() => {
+              lastScannedRef.current = null;
+              hasCalledOnScanRef.current = false;
+            }, 3000);
+          }
         }
       );
-
-      setScanner(html5QrcodeScanner);
-    }, 100);
+    } catch (error) {
+      console.error('Failed to start scanner:', error);
+      toast.error('Failed to start camera');
+      setIsScanning(false);
+    }
   };
 
   const stopScanner = () => {
-    if (scanner) {
-      scanner.clear();
-      setScanner(null);
+    if (codeReaderRef.current) {
+      try {
+        // Stop the video stream
+        const videoElement = videoRef.current;
+        if (videoElement && videoElement.srcObject) {
+          const stream = videoElement.srcObject as MediaStream;
+          stream.getTracks().forEach(track => track.stop());
+          videoElement.srcObject = null;
+        }
+        codeReaderRef.current = null;
+      } catch (error) {
+        console.error('Error stopping scanner:', error);
+      }
     }
     setIsScanning(false);
   };
@@ -61,11 +152,25 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
 
   useEffect(() => {
     return () => {
-      if (scanner) {
-        scanner.clear();
+      // Clear timeout
+      if (scanTimeoutRef.current) {
+        clearTimeout(scanTimeoutRef.current);
+      }
+
+      // Cleanup video stream
+      if (codeReaderRef.current) {
+        try {
+          const videoElement = videoRef.current;
+          if (videoElement && videoElement.srcObject) {
+            const stream = videoElement.srcObject as MediaStream;
+            stream.getTracks().forEach(track => track.stop());
+          }
+        } catch (err) {
+          console.log('Scanner cleanup error:', err);
+        }
       }
     };
-  }, [scanner]);
+  }, []);
 
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
@@ -101,7 +206,11 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
           </button>
         ) : (
           <div>
-            <div id="barcode-reader" className="mb-4"></div>
+            <video
+              ref={videoRef}
+              className="w-full rounded-lg mb-4"
+              style={{ maxHeight: '400px' }}
+            />
             <button
               onClick={stopScanner}
               className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
