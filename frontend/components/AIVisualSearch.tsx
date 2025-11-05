@@ -2,23 +2,12 @@
 
 import { useState, useRef } from 'react';
 import { api } from '@/lib/api';
+import { Product } from '@/lib/types';
 import toast from 'react-hot-toast';
-import Image from 'next/image';
-
-interface VisualSearchMatch {
-  id: number;
-  name: string;
-  price: number;
-  category: string;
-  barcode: string;
-  match_reason: string;
-  confidence: number;
-}
 
 interface VisualSearchResult {
-  identified_item: string;
-  matches: VisualSearchMatch[];
-  search_tips?: string;
+  products: Product[];
+  matches: number;
 }
 
 export default function AIVisualSearch() {
@@ -58,8 +47,8 @@ export default function AIVisualSearch() {
       const result = await api.ai.visualSearch(base64);
       setSearchResults(result);
 
-      if (result.matches.length > 0) {
-        toast.success(`Found ${result.matches.length} similar products!`);
+      if (result.products.length > 0) {
+        toast.success(`Found ${result.products.length} similar products!`);
       } else {
         toast.error('No similar products found. Try another image!');
       }
@@ -80,9 +69,9 @@ export default function AIVisualSearch() {
     });
   };
 
-  const handleAddToCart = async (productId: number) => {
+  const handleAddToCart = async (barcode: string) => {
     try {
-      await api.cart.addItem(productId, 1);
+      await api.cart.addItem(barcode, 1);
       toast.success('Added to cart!');
     } catch (error) {
       toast.error('Failed to add to cart');
@@ -233,45 +222,38 @@ export default function AIVisualSearch() {
                   </div>
                 )}
 
-                {/* Identified Item */}
-                {searchResults && !uploading && (
+                {/* Results Summary */}
+                {searchResults && !uploading && searchResults.products.length > 0 && (
                   <div className="bg-gradient-to-r from-purple-900 to-pink-900 border border-purple-500 rounded-lg p-4">
-                    <p className="text-gray-300 text-sm mb-1">AI Identified:</p>
-                    <p className="text-white font-bold text-lg">{searchResults.identified_item}</p>
+                    <p className="text-gray-300 text-sm mb-1">Search Results:</p>
+                    <p className="text-white font-bold text-lg">Found {searchResults.matches} matching products</p>
                   </div>
                 )}
 
                 {/* Matches */}
-                {searchResults && searchResults.matches.length > 0 && !uploading && (
+                {searchResults && searchResults.products.length > 0 && !uploading && (
                   <div>
                     <h3 className="text-white font-bold mb-3">
-                      Similar Products ({searchResults.matches.length})
+                      Similar Products ({searchResults.products.length})
                     </h3>
                     <div className="space-y-3">
-                      {searchResults.matches.map((match) => (
+                      {searchResults.products.map((product) => (
                         <div
-                          key={match.id}
+                          key={product.id}
                           className="bg-gray-900 border border-gray-700 rounded-lg p-4 hover:border-purple-500 transition-colors"
                         >
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex-1">
-                              <h4 className="text-white font-semibold">{match.name}</h4>
-                              <p className="text-purple-400 text-sm">{match.category}</p>
-                              <p className="text-gray-400 text-xs mt-1">{match.match_reason}</p>
+                              <h4 className="text-white font-semibold">{product.name}</h4>
+                              <p className="text-gray-400 text-xs mt-1">Barcode: {product.barcode}</p>
                             </div>
                             <span className="text-green-400 font-bold text-xl ml-2">
-                              ${match.price.toFixed(2)}
+                              ${product.price.toFixed(2)}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between mt-3">
-                            <div className="flex items-center gap-1 text-xs text-gray-400">
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                              <span>{(match.confidence * 100).toFixed(0)}% match</span>
-                            </div>
+                          <div className="flex items-center justify-end mt-3">
                             <button
-                              onClick={() => handleAddToCart(match.id)}
+                              onClick={() => handleAddToCart(product.barcode)}
                               className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
                             >
                               Add to Cart
@@ -284,12 +266,10 @@ export default function AIVisualSearch() {
                 )}
 
                 {/* No Matches */}
-                {searchResults && searchResults.matches.length === 0 && !uploading && (
+                {searchResults && searchResults.products.length === 0 && !uploading && (
                   <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4 text-center">
                     <p className="text-yellow-200 font-semibold mb-2">No exact matches found</p>
-                    {searchResults.search_tips && (
-                      <p className="text-yellow-300 text-sm">{searchResults.search_tips}</p>
-                    )}
+                    <p className="text-yellow-300 text-sm">Try uploading a different image or adjust the photo angle</p>
                   </div>
                 )}
               </div>

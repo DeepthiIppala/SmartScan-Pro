@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 
 export default function CheckoutPage() {
   const [cart, setCart] = useState<Cart | null>(null);
-  const [stripePromise, setStripePromise] = useState<any>(null);
+  const [stripePromise, setStripePromise] = useState<Promise<import('@stripe/stripe-js').Stripe | null> | null>(null);
   const [clientSecret, setClientSecret] = useState<string>('');
   const [paymentIntentId, setPaymentIntentId] = useState<string>('');
   const [loading, setLoading] = useState(true);

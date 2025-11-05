@@ -5,15 +5,15 @@ import toast from 'react-hot-toast';
 import { api } from '@/lib/api';
 import { Product } from '@/lib/types';
 
-interface AIProductRecognitionProps {
-  onProductRecognized: (productData: any) => void;
-}
-
 interface RecognizedProduct {
   product_name: string;
   confidence: number;
   category?: string;
   description?: string;
+}
+
+interface AIProductRecognitionProps {
+  onProductRecognized: (productData: RecognizedProduct) => void;
 }
 
 export default function AIProductRecognition({ onProductRecognized }: AIProductRecognitionProps) {
@@ -142,13 +142,17 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
     try {
       const result = await api.ai.recognizeProduct(imageData);
 
-      if (result.confidence >= 0.7) {
-        setRecognizedProduct(result);
-        toast.success(`AI identified: ${result.product_name}!`);
-        onProductRecognized(result);
+      if (result.confidence !== undefined && result.confidence >= 0.7 && result.product) {
+        const recognizedData: RecognizedProduct = {
+          product_name: result.product.name,
+          confidence: result.confidence
+        };
+        setRecognizedProduct(recognizedData);
+        toast.success(`AI identified: ${result.product.name}!`);
+        onProductRecognized(recognizedData);
 
         // Search database for matching products
-        await searchDatabaseForProduct(result.product_name);
+        await searchDatabaseForProduct(result.product.name);
       } else {
         toast.error('Could not identify product with high confidence. Please try again or use barcode scanner.');
       }
@@ -181,7 +185,7 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
     <div className="bg-gray-800 shadow rounded-lg p-6 mb-6 border border-gray-700">
       <h2 className="text-xl font-bold text-white mb-4">AI Product Recognition</h2>
       <p className="text-sm text-gray-300 mb-4">
-        Can't scan the barcode? Take a photo and let AI identify the product!
+        Can&apos;t scan the barcode? Take a photo and let AI identify the product!
       </p>
 
       {!showCamera ? (

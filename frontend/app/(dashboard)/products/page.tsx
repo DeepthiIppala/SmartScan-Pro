@@ -19,6 +19,7 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [cartItemCount, setCartItemCount] = useState(0);
   const processingBarcodeRef = useRef<string | null>(null);
+  const isProcessingRef = useRef<boolean>(false);
 
   useEffect(() => {
     loadProducts();
@@ -48,13 +49,20 @@ export default function ProductsPage() {
   };
 
   const handleScan = async (barcode: string) => {
-    // Prevent duplicate processing of the same barcode
+    // CRITICAL: Check if ANY scan is currently being processed
+    if (isProcessingRef.current) {
+      console.log('A scan is already being processed, ignoring this call');
+      return;
+    }
+
+    // Check if this specific barcode is already being processed
     if (processingBarcodeRef.current === barcode) {
       console.log('Already processing this barcode, ignoring duplicate');
       return;
     }
 
-    // Mark this barcode as being processed
+    // IMMEDIATELY set processing flags to prevent any other calls
+    isProcessingRef.current = true;
     processingBarcodeRef.current = barcode;
 
     try {
@@ -69,6 +77,7 @@ export default function ProductsPage() {
       // Reset after 2 seconds to allow rescanning the same item
       setTimeout(() => {
         processingBarcodeRef.current = null;
+        isProcessingRef.current = false;
       }, 2000);
     }
   };
@@ -84,7 +93,7 @@ export default function ProductsPage() {
     }
   };
 
-  const handleAIProductRecognized = (productData: any) => {
+  const handleAIProductRecognized = (productData: { product_name: string; confidence: number }) => {
     toast.success(`AI identified: ${productData.product_name} (${productData.confidence * 100}% confident)`);
     // You can display the recognized product or search for it in your database
     console.log('AI Recognized Product:', productData);

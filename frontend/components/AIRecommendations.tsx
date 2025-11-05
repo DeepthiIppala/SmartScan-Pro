@@ -1,16 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { api } from '@/lib/api';
+import { Product } from '@/lib/types';
 import toast from 'react-hot-toast';
 
-interface Recommendation {
-  product: string;
-  reason: string;
-}
-
 export default function AIRecommendations() {
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [recommendations, setRecommendations] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
 
@@ -96,9 +92,9 @@ export default function AIRecommendations() {
 
       {showRecommendations && recommendations.length > 0 && (
         <div className="space-y-3 mt-4">
-          {recommendations.map((rec, index) => (
+          {recommendations.map((product, index) => (
             <div
-              key={index}
+              key={product.id}
               className="bg-gray-800 rounded-lg p-4 shadow-sm border border-indigo-500 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start gap-3">
@@ -106,8 +102,8 @@ export default function AIRecommendations() {
                   {index + 1}
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-white mb-1">{rec.product}</h4>
-                  <p className="text-sm text-gray-300">{rec.reason}</p>
+                  <h4 className="font-semibold text-white mb-1">{product.name}</h4>
+                  <p className="text-sm text-gray-300">${product.price.toFixed(2)}</p>
                 </div>
                 <button className="text-indigo-400 hover:text-indigo-300 font-medium text-sm">
                   Add to Cart

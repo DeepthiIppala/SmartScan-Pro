@@ -17,10 +17,13 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
   const lastScannedRef = useRef<string | null>(null);
   const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasCalledOnScanRef = useRef(false);
+  const isScanningActiveRef = useRef(false);
+  const controlsRef = useRef<{ stop: () => void } | null>(null);
 
   const playBeep = () => {
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const audioContext = new AudioContextClass();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 
@@ -40,16 +43,18 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
   };
 
   const startScanner = async () => {
-    if (isScanning) return;
+    if (isScanning || isScanningActiveRef.current) return;
 
     try {
       setIsScanning(true);
+      isScanningActiveRef.current = true;
 
       // Wait for video element to render
       await new Promise(resolve => setTimeout(resolve, 100));
 
       if (!videoRef.current) {
         setIsScanning(false);
+        isScanningActiveRef.current = false;
         toast.error('Video element not ready');
         return;
       }
@@ -76,21 +81,27 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
       const codeReader = new BrowserMultiFormatReader(hints);
       codeReaderRef.current = codeReader;
 
-      await codeReader.decodeFromVideoDevice(
+      const controls = await codeReader.decodeFromVideoDevice(
         undefined, // Use default camera
         videoRef.current,
-        (result, error) => {
+        (result) => {
+          // Check if scanning is still active
+          if (!isScanningActiveRef.current) {
+            return;
+          }
+
           if (result) {
             const barcode = result.getText();
 
-            // Triple protection against duplicates
-            if (lastScannedRef.current === barcode || hasCalledOnScanRef.current) {
+            // Quadruple protection against duplicates
+            if (lastScannedRef.current === barcode || hasCalledOnScanRef.current || !isScanningActiveRef.current) {
               return;
             }
 
-            // Immediately mark as scanned to prevent duplicates
-            lastScannedRef.current = barcode;
+            // IMMEDIATELY disable all scanning to prevent any more callbacks
+            isScanningActiveRef.current = false;
             hasCalledOnScanRef.current = true;
+            lastScannedRef.current = barcode;
 
             // Stop scanner immediately to prevent more scans
             stopScanner();
@@ -98,10 +109,7 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
             // Play beep sound
             playBeep();
 
-            // Show success toast
-            toast.success(`Scanned: ${barcode}`);
-
-            // Call the onScan callback ONCE
+            // Call the onScan callback ONCE (removed toast from here)
             onScan(barcode);
 
             // Clear previous timeout if exists
@@ -117,28 +125,45 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
           }
         }
       );
+
+      // Store controls to stop scanning later
+      controlsRef.current = controls;
     } catch (error) {
       console.error('Failed to start scanner:', error);
       toast.error('Failed to start camera');
       setIsScanning(false);
+      isScanningActiveRef.current = false;
     }
   };
 
   const stopScanner = () => {
-    if (codeReaderRef.current) {
+    // IMMEDIATELY disable scanning
+    isScanningActiveRef.current = false;
+
+    // Stop using controls if available
+    if (controlsRef.current) {
       try {
-        // Stop the video stream
-        const videoElement = videoRef.current;
-        if (videoElement && videoElement.srcObject) {
-          const stream = videoElement.srcObject as MediaStream;
-          stream.getTracks().forEach(track => track.stop());
-          videoElement.srcObject = null;
-        }
-        codeReaderRef.current = null;
+        controlsRef.current.stop();
+        controlsRef.current = null;
       } catch (error) {
-        console.error('Error stopping scanner:', error);
+        console.error('Error stopping controls:', error);
       }
     }
+
+    // Stop the video stream
+    const videoElement = videoRef.current;
+    if (videoElement && videoElement.srcObject) {
+      try {
+        const stream = videoElement.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+        videoElement.srcObject = null;
+      } catch (error) {
+        console.error('Error stopping video stream:', error);
+      }
+    }
+
+    // Clear the code reader reference
+    codeReaderRef.current = null;
     setIsScanning(false);
   };
 
