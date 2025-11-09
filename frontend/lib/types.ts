@@ -43,6 +43,8 @@ export interface Transaction {
   qr_code: string; // base64 encoded data URL
   created_at: string;
   items: TransactionItem[];
+  requires_audit?: boolean;
+  audit_reason?: string;
 }
 
 // API Request/Response types

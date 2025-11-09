@@ -95,7 +95,9 @@ def get_transaction_history():
             "total_amount": t.total_amount,
             "created_at": t.created_at.isoformat(),
             "qr_code": t.qr_code,
-            "items": items
+            "items": items,
+            "requires_audit": t.requires_audit,
+            "audit_reason": t.audit_reason
         }
         print(f"Returning transaction {t.id} with {len(items)} items")
         history.append(transaction_data)

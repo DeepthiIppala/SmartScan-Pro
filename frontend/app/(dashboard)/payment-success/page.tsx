@@ -95,15 +95,45 @@ function PaymentSuccessContent() {
                 </div>
               </div>
 
+              {/* SECURITY AUDIT ALERT */}
+              {transaction.requires_audit && (
+                <div className="mb-6 bg-gradient-to-br from-red-900 to-orange-900 border-2 border-red-500 rounded-lg p-6 text-center animate-pulse">
+                  <div className="mb-4">
+                    <h2 className="text-2xl font-bold text-white mb-2">
+                      🔒 SECURITY VERIFICATION REQUIRED
+                    </h2>
+                    <p className="text-red-200 text-sm font-semibold">
+                      {transaction.audit_reason}
+                    </p>
+                  </div>
+
+                  <div className="bg-yellow-100 border-2 border-yellow-500 p-4 rounded-lg mb-4">
+                    <p className="text-gray-900 font-bold text-lg">
+                      ⚠️ STOP AT EXIT
+                    </p>
+                    <p className="text-gray-800 text-sm mt-1">
+                      Please proceed to security verification station
+                    </p>
+                  </div>
+
+                  <div className="text-white text-sm space-y-1">
+                    <p className="font-semibold">A security officer will verify your items</p>
+                    <p className="text-red-300">This is a standard random check for store safety</p>
+                  </div>
+                </div>
+              )}
+
               {/* EXIT PASS QR CODE */}
               {transaction.qr_code && (
-                <div className="mb-6 bg-gradient-to-br from-green-900 to-emerald-900 border-2 border-green-500 rounded-lg p-6 text-center">
+                <div className={`mb-6 ${transaction.requires_audit ? 'bg-gradient-to-br from-orange-900 to-red-900 border-2 border-orange-500' : 'bg-gradient-to-br from-green-900 to-emerald-900 border-2 border-green-500'} rounded-lg p-6 text-center`}>
                   <div className="mb-4">
                     <h2 className="text-2xl font-bold text-white mb-2">
                       🎫 EXIT PASS
                     </h2>
-                    <p className="text-green-200 text-sm">
-                      Show this QR code to security when leaving the store
+                    <p className={`${transaction.requires_audit ? 'text-orange-200' : 'text-green-200'} text-sm`}>
+                      {transaction.requires_audit
+                        ? 'Show this QR code to security officer at verification station'
+                        : 'Show this QR code to security when leaving the store'}
                     </p>
                   </div>
 
@@ -117,7 +147,9 @@ function PaymentSuccessContent() {
 
                   <div className="text-white text-sm space-y-1">
                     <p className="font-semibold">✓ Payment Verified</p>
-                    <p className="text-green-300">Order #{transaction.id} - {transaction.items.reduce((sum, item) => sum + item.quantity, 0)} items</p>
+                    <p className={`${transaction.requires_audit ? 'text-orange-300' : 'text-green-300'}`}>
+                      Order #{transaction.id} - {transaction.items.reduce((sum, item) => sum + item.quantity, 0)} items
+                    </p>
                   </div>
                 </div>
               )}

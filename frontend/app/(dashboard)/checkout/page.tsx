@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
@@ -17,8 +17,13 @@ export default function CheckoutPage() {
   const [paymentIntentId, setPaymentIntentId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
+    // Prevent double initialization in React Strict Mode
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
     // Load Stripe configuration
     api.payments.getConfig().then((config) => {
       setStripePromise(loadStripe(config.publishableKey));

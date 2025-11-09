@@ -48,6 +48,8 @@ class Transaction(db.Model):
     payment_intent_id = db.Column(db.String(255), nullable=True)  # Stripe payment intent ID
     qr_code = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    requires_audit = db.Column(db.Boolean, default=False)  # Security audit flag
+    audit_reason = db.Column(db.String(255), nullable=True)  # Why audit was triggered
     items = db.relationship('TransactionItem', backref='transaction', cascade="all, delete-orphan")
 
 class TransactionItem(db.Model):

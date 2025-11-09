@@ -18,6 +18,8 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [cartItemCount, setCartItemCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'price-low' | 'price-high'>('name');
   const processingBarcodeRef = useRef<string | null>(null);
   const isProcessingRef = useRef<boolean>(false);
 
@@ -99,6 +101,22 @@ export default function ProductsPage() {
     console.log('AI Recognized Product:', productData);
   };
 
+  // Filter and sort products
+  const filteredAndSortedProducts = products
+    .filter((product) =>
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.barcode.includes(searchQuery)
+    )
+    .sort((a, b) => {
+      if (sortBy === 'name') {
+        return a.name.localeCompare(b.name);
+      } else if (sortBy === 'price-low') {
+        return a.price - b.price;
+      } else {
+        return b.price - a.price;
+      }
+    });
+
   return (
     <ProtectedRoute>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -151,20 +169,60 @@ export default function ProductsPage() {
 
         {/* Product Grid */}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">All Products</h2>
+          <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">All Products</h2>
+
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              {/* Search Input */}
+              <div className="relative flex-1 sm:w-64">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 pl-10 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <svg
+                  className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+
+              {/* Sort Dropdown */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'name' | 'price-low' | 'price-high')}
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="name">Sort by Name</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+              </select>
+            </div>
+          </div>
+
           {loading ? (
             <div className="text-center py-12">
               <p className="text-gray-600 dark:text-gray-300">Loading products...</p>
             </div>
-          ) : products.length === 0 ? (
+          ) : filteredAndSortedProducts.length === 0 ? (
             <div className="bg-gray-100 dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-300 dark:border-gray-700">
               <p className="text-gray-600 dark:text-gray-300 text-center">
-                No products available. Contact admin to add products.
+                {searchQuery ? `No products found matching "${searchQuery}"` : 'No products available. Contact admin to add products.'}
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product) => (
+              {filteredAndSortedProducts.map((product) => (
                 <ProductCard
                   key={product.id}
                   product={product}

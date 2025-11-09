@@ -110,11 +110,35 @@ def confirm_payment():
         
         print(f"[DEBUG] Creating transaction for ${total_amount:.2f}")
 
+        # Determine if transaction requires audit (10% random + high-value/bulk triggers)
+        import random
+        requires_audit = False
+        audit_reason = None
+
+        # 10% random audit
+        if random.random() < 0.10:
+            requires_audit = True
+            audit_reason = "Random security check"
+
+        # High-value transaction ($100+)
+        if total_amount >= 100:
+            requires_audit = True
+            audit_reason = "High-value transaction"
+
+        # Bulk purchase (5+ of same item)
+        for cart_item in cart.items:
+            if cart_item.quantity >= 5:
+                requires_audit = True
+                audit_reason = "Bulk purchase detected"
+                break
+
         # Create transaction record
         transaction = Transaction(
             user_id=user_id,
             total_amount=total_amount,  # Use calculated amount in dollars
-            payment_intent_id=payment_intent_id
+            payment_intent_id=payment_intent_id,
+            requires_audit=requires_audit,
+            audit_reason=audit_reason
         )
 
         db.session.add(transaction)
@@ -176,7 +200,9 @@ def confirm_payment():
             'message': 'Payment successful',
             'transaction_id': transaction.id,
             'total_amount': total_amount,
-            'qr_code': transaction.qr_code
+            'qr_code': transaction.qr_code,
+            'requires_audit': transaction.requires_audit,
+            'audit_reason': transaction.audit_reason
         }), 200
 
     except Exception as e:

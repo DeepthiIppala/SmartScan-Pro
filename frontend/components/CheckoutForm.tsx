@@ -48,6 +48,9 @@ export default function CheckoutForm({ paymentIntentId, amount }: CheckoutFormPr
       if (paymentIntent && paymentIntent.status === 'succeeded') {
         // Confirm payment on backend and create transaction
         try {
+          // Small delay to ensure Stripe has fully processed the payment
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
           const result = await api.payments.confirmPayment(paymentIntentId);
 
           toast.success('Payment successful!');
