@@ -11,7 +11,12 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
-    cors.init_app(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+    # CORS configuration - allow multiple origins from environment variable
+    import os
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+    # Support multiple origins separated by commas
+    allowed_origins = [origin.strip() for origin in frontend_url.split(',')]
+    cors.init_app(app, resources={r"/api/*": {"origins": allowed_origins}})
 
     # JWT blocklist configuration for logout
     @jwt.token_in_blocklist_loader
