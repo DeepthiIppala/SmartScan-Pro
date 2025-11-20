@@ -1,17 +1,17 @@
 from flask import request, jsonify, Blueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from .gemini_service import GeminiService
+from .openai_service import OpenAIService
 from ..models import Transaction, Product
 import json
 
 ai_bp = Blueprint('ai', __name__)
 
-# Initialize Gemini service
+# Initialize OpenAI service
 try:
-    gemini = GeminiService()
+    ai_service = OpenAIService()
 except ValueError as e:
     print(f"Warning: {e}")
-    gemini = None
+    ai_service = None
 
 @ai_bp.route('/recognize-product', methods=['POST'])
 @jwt_required()
@@ -21,8 +21,8 @@ def recognize_product():
     POST /api/ai/recognize-product
     Body: { "image": "base64_encoded_image_data" }
     """
-    if not gemini:
-        return jsonify({"error": "AI service not configured. Please set GEMINI_API_KEY"}), 503
+    if not ai_service:
+        return jsonify({"error": "AI service not configured. Please set OPENAI_API_KEY"}), 503
 
     try:
         data = request.get_json()
@@ -32,7 +32,7 @@ def recognize_product():
             return jsonify({"error": "No image provided"}), 400
 
         # Call Gemini Vision API
-        result = gemini.recognize_product(image_data)
+        result = ai_service.recognize_product(image_data)
 
         # Parse JSON response from Gemini
         try:
@@ -66,8 +66,8 @@ def visual_search():
     Body: { "image": "base64_encoded_image_data" }
     Upload ANY photo and find similar products in inventory
     """
-    if not gemini:
-        return jsonify({"error": "AI service not configured. Please set GEMINI_API_KEY"}), 503
+    if not ai_service:
+        return jsonify({"error": "AI service not configured. Please set OPENAI_API_KEY"}), 503
 
     try:
         data = request.get_json()
@@ -90,7 +90,7 @@ def visual_search():
         ]
 
         # Call Gemini Visual Search
-        result = gemini.visual_product_search(image_data, product_list)
+        result = ai_service.visual_product_search(image_data, product_list)
 
         # Clean up markdown formatting if present
         if '```json' in result:
@@ -137,8 +137,8 @@ def chat():
     POST /api/ai/chat
     Body: { "message": "user message", "history": [...] }
     """
-    if not gemini:
-        return jsonify({"error": "AI service not configured. Please set GEMINI_API_KEY"}), 503
+    if not ai_service:
+        return jsonify({"error": "AI service not configured. Please set OPENAI_API_KEY"}), 503
 
     try:
         data = request.get_json()
@@ -149,7 +149,7 @@ def chat():
             return jsonify({"error": "No message provided"}), 400
 
         # Call Gemini Chat API
-        response = gemini.chat_assistant(user_message, history)
+        response = ai_service.chat_assistant(user_message, history)
 
         return jsonify({
             "response": response,
@@ -167,8 +167,8 @@ def get_recommendations():
     AI Feature 4: Smart Product Recommendations
     GET /api/ai/recommendations
     """
-    if not gemini:
-        return jsonify({"error": "AI service not configured. Please set GEMINI_API_KEY"}), 503
+    if not ai_service:
+        return jsonify({"error": "AI service not configured. Please set OPENAI_API_KEY"}), 503
 
     try:
         user_id = get_jwt_identity()
@@ -198,7 +198,7 @@ def get_recommendations():
                 })
 
         # Generate recommendations
-        result = gemini.generate_recommendations(history_summary, current_cart_items)
+        result = ai_service.generate_recommendations(history_summary, current_cart_items)
 
         # Parse JSON response
         try:
@@ -225,8 +225,8 @@ def fraud_check():
     POST /api/ai/fraud-check
     Body: { "scan_data": {...}, "behavior": {...} }
     """
-    if not gemini:
-        return jsonify({"error": "AI service not configured. Please set GEMINI_API_KEY"}), 503
+    if not ai_service:
+        return jsonify({"error": "AI service not configured. Please set OPENAI_API_KEY"}), 503
 
     try:
         data = request.get_json()
@@ -234,7 +234,7 @@ def fraud_check():
         user_behavior = data.get('behavior', {})
 
         # Call Gemini Fraud Detection
-        result = gemini.detect_fraud_patterns(scan_data, user_behavior)
+        result = ai_service.detect_fraud_patterns(scan_data, user_behavior)
 
         # Parse JSON response
         try:
