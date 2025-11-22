@@ -255,8 +255,10 @@ export const transactionsAPI = {
 
 // Define types for AI responses
 interface AIRecognizeResponse {
-  product?: Product;
+  product_name?: string;
   confidence?: number;
+  category?: string;
+  description?: string;
   error?: string;
 }
 

@@ -72,7 +72,7 @@ export default function ProductsPage() {
       await api.cart.addItem(barcode, 1);
       toast.success(`Added ${product.name} to cart!`);
       loadCartCount(); // Update cart count
-    } catch (error) {
+    } catch {
       // Use warning toast instead of error for better UX
       toast('Product not found in database', {
         icon: '⚠️',
