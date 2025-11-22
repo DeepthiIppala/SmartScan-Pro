@@ -29,18 +29,32 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
 
   const startCamera = async () => {
     try {
+      console.log('Starting camera...');
+
+      // Show camera UI first
+      setShowCamera(true);
+
+      // Wait a bit for video element to render
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' } // Use back camera on mobile
       });
 
+      console.log('Camera stream obtained:', mediaStream);
+
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         setStream(mediaStream);
-        setShowCamera(true);
+        console.log('Camera should be visible now');
+      } else {
+        console.error('Video ref is null');
+        setShowCamera(false);
       }
     } catch (error) {
       toast.error('Could not access camera');
-      console.error(error);
+      console.error('Camera error:', error);
+      setShowCamera(false);
     }
   };
 
@@ -142,17 +156,19 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
     try {
       const result = await api.ai.recognizeProduct(imageData);
 
-      if (result.confidence !== undefined && result.confidence >= 0.7 && result.product) {
+      if (result.confidence !== undefined && result.confidence >= 0.7 && result.product_name) {
         const recognizedData: RecognizedProduct = {
-          product_name: result.product.name,
-          confidence: result.confidence
+          product_name: result.product_name,
+          confidence: result.confidence,
+          category: result.category,
+          description: result.description
         };
         setRecognizedProduct(recognizedData);
-        toast.success(`AI identified: ${result.product.name}!`);
+        toast.success(`AI identified: ${result.product_name}!`);
         onProductRecognized(recognizedData);
 
         // Search database for matching products
-        await searchDatabaseForProduct(result.product.name);
+        await searchDatabaseForProduct(result.product_name);
       } else {
         toast.error('Could not identify product with high confidence. Please try again or use barcode scanner.');
       }
@@ -226,7 +242,9 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
             ref={videoRef}
             autoPlay
             playsInline
-            className="w-full rounded-lg mb-3"
+            muted
+            className="w-full rounded-lg mb-3 bg-black"
+            style={{ minHeight: '300px', maxHeight: '500px' }}
           />
           <div className="flex gap-3">
             <button

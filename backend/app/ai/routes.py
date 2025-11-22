@@ -119,7 +119,9 @@ def visual_search():
                         "match_reason": match.get('match_reason', ''),
                         "confidence": match.get('confidence', 0.0)
                     })
-            search_results['matches'] = enriched_matches
+            # Return as 'products' to match frontend expectation
+            search_results['products'] = enriched_matches
+            search_results['matches'] = len(enriched_matches)  # Count of matches
 
         return jsonify(search_results), 200
 

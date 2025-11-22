@@ -84,7 +84,16 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
       const controls = await codeReader.decodeFromVideoDevice(
         undefined, // Use default camera
         videoRef.current,
-        (result) => {
+        (result, error) => {
+          // Log scanning attempts for debugging
+          if (error) {
+            // Don't log NotFoundException - it's normal when no barcode is visible
+            if (error.name !== 'NotFoundException') {
+              console.error('Barcode scanning error:', error);
+            }
+            return;
+          }
+
           // Check if scanning is still active
           if (!isScanningActiveRef.current) {
             return;
@@ -92,19 +101,16 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
 
           if (result) {
             const barcode = result.getText();
+            console.log('Barcode detected:', barcode);
 
             // Quadruple protection against duplicates
             if (lastScannedRef.current === barcode || hasCalledOnScanRef.current || !isScanningActiveRef.current) {
               return;
             }
 
-            // IMMEDIATELY disable all scanning to prevent any more callbacks
-            isScanningActiveRef.current = false;
+            // Mark this barcode as scanned (but keep scanner running)
             hasCalledOnScanRef.current = true;
             lastScannedRef.current = barcode;
-
-            // Stop scanner immediately to prevent more scans
-            stopScanner();
 
             // Play beep sound
             playBeep();
@@ -117,11 +123,11 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
               clearTimeout(scanTimeoutRef.current);
             }
 
-            // Reset after 3 seconds to allow rescanning
+            // Reset after 2 seconds to allow rescanning or scanning different items
             scanTimeoutRef.current = setTimeout(() => {
               lastScannedRef.current = null;
               hasCalledOnScanRef.current = false;
-            }, 3000);
+            }, 2000);
           }
         }
       );
@@ -233,8 +239,11 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
           <div>
             <video
               ref={videoRef}
-              className="w-full rounded-lg mb-4"
-              style={{ maxHeight: '400px' }}
+              autoPlay
+              playsInline
+              muted
+              className="w-full rounded-lg mb-4 bg-black"
+              style={{ minHeight: '300px', maxHeight: '400px' }}
             />
             <button
               onClick={stopScanner}

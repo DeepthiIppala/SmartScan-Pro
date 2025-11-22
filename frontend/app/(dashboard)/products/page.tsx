@@ -73,8 +73,13 @@ export default function ProductsPage() {
       toast.success(`Added ${product.name} to cart!`);
       loadCartCount(); // Update cart count
     } catch (error) {
-      toast.error('Product not found or failed to add to cart');
-      console.error(error);
+      // Use warning toast instead of error for better UX
+      toast('Product not found in database', {
+        icon: '⚠️',
+        duration: 3000
+      });
+      // Log as info, not error, since this is expected behavior
+      console.info('Product not found:', barcode);
     } finally {
       // Reset after 2 seconds to allow rescanning the same item
       setTimeout(() => {
