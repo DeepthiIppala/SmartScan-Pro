@@ -192,7 +192,7 @@ class OpenAIService:
             AVAILABLE PRODUCTS IN STORE:
             {product_list}
 
-            TASK: Analyze what's in the current cart and recommend 3-5 complementary products.
+            TASK: Analyze what's in the current cart and recommend 2-3 complementary products.
 
             MATCHING RULES (in order of priority):
             1. If cart has SHOES/FOOTWEAR → recommend ATHLETIC WEAR, SOCKS, or ACCESSORIES
