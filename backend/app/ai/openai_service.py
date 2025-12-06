@@ -164,7 +164,7 @@ class OpenAIService:
         except Exception as e:
             raise Exception(f"Visual search failed: {str(e)}")
 
-    def generate_recommendations(self, user_history, current_cart=None):
+    def generate_recommendations(self, user_history, current_cart=None, available_products=None):
         """
         AI Feature 4: Smart Recommendations
         Generates personalized product recommendations based on shopping history and current cart
@@ -173,29 +173,47 @@ class OpenAIService:
             # Build context about current cart
             cart_context = "Empty cart" if not current_cart or len(current_cart) == 0 else f"Current cart has: {current_cart}"
 
+            # Build available products list
+            product_list = "No products available"
+            if available_products:
+                product_list = "\n".join([
+                    f"- {p['name']} (${p['price']}) - Category: {p.get('category', 'General')}"
+                    for p in available_products
+                ])
+
             prompt = f"""You are a smart recommendation engine for a retail store.
 
-            CURRENT SHOPPING SESSION (PRIORITY):
+            CURRENT SHOPPING SESSION:
             {cart_context}
 
-            User's past shopping history: {user_history if user_history else 'No history'}
+            PAST PURCHASES:
+            {user_history if user_history else 'No purchase history'}
 
-            IMPORTANT: Recommend products that go well with what's CURRENTLY IN THE CART.
-            If the cart has clothing items, recommend clothing accessories.
-            If the cart has food items, recommend complementary food items.
+            AVAILABLE PRODUCTS IN STORE:
+            {product_list}
 
-            Based on this data, suggest 3-5 products the user might want to buy.
-            Consider:
-            - Items that complement what's currently in the cart (HIGHEST PRIORITY)
-            - Frequently bought together items
-            - Matching accessories or related products
-            - Similar category items
+            TASK: Analyze what's in the current cart and recommend 3-5 complementary products.
 
-            Respond ONLY in this exact JSON format (no markdown, no code blocks):
+            MATCHING RULES (in order of priority):
+            1. If cart has SHOES/FOOTWEAR → recommend ATHLETIC WEAR, SOCKS, or ACCESSORIES
+            2. If cart has CLOTHING → recommend matching ACCESSORIES, SHOES, or similar CLOTHING items
+            3. If cart has HANDBAGS/ACCESSORIES → recommend matching CLOTHING or SHOES
+            4. If cart has FOOD/GROCERY → recommend other FOOD/GROCERY items
+            5. If cart has KITCHEN items → recommend other KITCHEN or HOME items
+
+            CRITICAL RULES:
+            - You MUST use EXACT product names from the AVAILABLE PRODUCTS list
+            - Focus on items from the SAME or COMPLEMENTARY categories
+            - Example: Running Shoes → recommend Athletic Socks, Gym T-Shirts, Sports Watch
+            - Example: Cardigan → recommend Jeans, Handbag, Scarf
+            - DO NOT recommend random unrelated items
+
+            Respond ONLY in this exact JSON format (no markdown):
             {{
                 "recommendations": [
-                    {{"product": "Product Name", "reason": "why recommend this"}},
-                    {{"product": "Another Product", "reason": "why recommend this"}}
+                    {{"product": "Exact Product Name", "reason": "brief reason"}},
+                    {{"product": "Exact Product Name", "reason": "brief reason"}},
+                    {{"product": "Exact Product Name", "reason": "brief reason"}}
                 ]
             }}
             """

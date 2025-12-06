@@ -35,7 +35,7 @@ graph TB
 
     subgraph "External Services"
         I[Stripe API]
-        J[Google Gemini AI]
+        J[OpenAI API]
     end
 
     A --> B
@@ -58,7 +58,7 @@ graph TB
 - **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
 - **Backend**: Python Flask, SQLAlchemy, JWT
 - **Database**: SQLite (95 products)
-- **AI**: Google Gemini 2.5 Flash
+- **AI**: OpenAI GPT-4o-mini
 - **Payments**: Stripe
 - **Deployment**: Local (Development)
 
@@ -97,7 +97,7 @@ graph TB
             end
 
             subgraph "Services"
-                K[ai/gemini_service.py]
+                K[ai/openai_service.py]
                 L[payments/stripe_service.py]
                 M[receipts/receipt_generator.py]
             end
@@ -171,7 +171,7 @@ if __name__ == '__main__':
 - `/api/ai` - Product recognition, chat, visual search, recommendations
 
 **5. Services**
-- **Gemini AI**: Product recognition, visual search, recommendations, chat
+- **OpenAI API**: Product recognition, visual search, recommendations, chat
 - **Stripe**: Payment processing, refunds
 - **Receipt Generator**: Text and HTML receipts
 
@@ -378,8 +378,8 @@ flowchart TD
     subgraph "AI Product Recognition"
         AIUpload --> Encode[Convert image to base64]
         Encode --> SendAI[POST /api/ai/recognize-product]
-        SendAI --> GeminiVision[Google Gemini Vision API]
-        GeminiVision --> Identify[AI identifies product]
+        SendAI --> OpenAIVision[OpenAI GPT-4o-mini Vision API]
+        OpenAIVision --> Identify[AI identifies product]
         Identify --> Extract[Extract: name, category, confidence]
         Extract --> FuzzyMatch[Fuzzy match with database]
         FuzzyMatch --> Keywords[Extract keywords from AI name]
@@ -406,7 +406,7 @@ flowchart TD
     style Barcode fill:#3498db
     style AIUpload fill:#9b59b6
     style Browse fill:#2ecc71
-    style GeminiVision fill:#e74c3c
+    style OpenAIVision fill:#e74c3c
 ```
 
 ### AI Product Recognition Algorithm:
@@ -423,7 +423,7 @@ image_bytes = base64.b64decode(image_data)
 image = Image.open(io.BytesIO(image_bytes))
 ```
 
-**Step 2: Gemini AI Analysis**
+**Step 2: OpenAI Vision Analysis**
 ```python
 prompt = """Identify this product and provide:
 {
@@ -433,7 +433,16 @@ prompt = """Identify this product and provide:
     "description": "brief description"
 }"""
 
-response = gemini_vision_model.generate_content([prompt, image])
+response = openai_client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{
+        "role": "user",
+        "content": [
+            {"type": "text", "text": prompt},
+            {"type": "image_url", "image_url": {"url": image_data}}
+        ]
+    }]
+)
 ```
 
 **Step 3: Fuzzy Matching**
@@ -459,7 +468,7 @@ sequenceDiagram
     participant U as User
     participant F as Frontend (AIVisualSearch)
     participant B as Backend
-    participant G as Gemini AI
+    participant G as OpenAI API
     participant D as Database
 
     Note over U,G: NEW FEATURE: Upload ANY photo to find similar products
@@ -744,9 +753,9 @@ flowchart TD
         BuildContext --> Priority["PRIORITY: Current cart items"]
     end
 
-    Priority --> GeminiPrompt[Send to Gemini AI]
+    Priority --> OpenAIPrompt[Send to OpenAI API]
 
-    GeminiPrompt --> AIAnalysis{AI Analysis}
+    OpenAIPrompt --> AIAnalysis{AI Analysis}
 
     subgraph "AI Decision Making"
         AIAnalysis --> DetectCategory[Detect: Clothing item in cart]
@@ -766,7 +775,7 @@ flowchart TD
 
     AddToCart --> UpdateCart[Update cart display]
 
-    style GeminiPrompt fill:#9b59b6
+    style OpenAIPrompt fill:#9b59b6
     style AIAnalysis fill:#e74c3c
     style Enrich fill:#2ecc71
 ```
@@ -956,7 +965,7 @@ Items:
 | GET    | /api/receipts/:id/html                 | Yes  | Get HTML receipt           |
 | GET    | /api/receipts/:id/download             | Yes  | Download HTML receipt      |
 
-### AI Endpoints (Gemini)
+### AI Endpoints (OpenAI)
 
 | Method | Endpoint                      | Auth | Description                          |
 |--------|-------------------------------|------|--------------------------------------|
@@ -1098,7 +1107,7 @@ Content-Type: application/json
 
 **Backend ↔ External Services:**
 - Stripe for payments
-- Gemini AI for intelligence
+- OpenAI API for intelligence
 - Environment variable config
 
 ### 3. Key Innovations

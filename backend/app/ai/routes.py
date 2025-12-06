@@ -31,10 +31,10 @@ def recognize_product():
         if not image_data:
             return jsonify({"error": "No image provided"}), 400
 
-        # Call Gemini Vision API
+        # Call OpenAI Vision API
         result = ai_service.recognize_product(image_data)
 
-        # Parse JSON response from Gemini
+        # Parse JSON response from OpenAI
         try:
             # Extract JSON from markdown code blocks if present
             if '```json' in result:
@@ -46,7 +46,7 @@ def recognize_product():
             return jsonify(product_data), 200
 
         except json.JSONDecodeError:
-            # If Gemini returns plain text instead of JSON
+            # If OpenAI returns plain text instead of JSON
             return jsonify({
                 "product_name": "Unknown Product",
                 "confidence": 0.0,
@@ -89,7 +89,7 @@ def visual_search():
             for p in products
         ]
 
-        # Call Gemini Visual Search
+        # Call OpenAI Visual Search
         result = ai_service.visual_product_search(image_data, product_list)
 
         # Clean up markdown formatting if present
@@ -150,7 +150,7 @@ def chat():
         if not user_message:
             return jsonify({"error": "No message provided"}), 400
 
-        # Call Gemini Chat API
+        # Call OpenAI Chat API
         response = ai_service.chat_assistant(user_message, history)
 
         return jsonify({
@@ -199,8 +199,20 @@ def get_recommendations():
                     "price": item.product.price
                 })
 
+        # Get available products to pass to AI
+        all_products = Product.query.all()
+        available_products = [
+            {
+                "id": p.id,
+                "name": p.name,
+                "price": p.price,
+                "category": p.category
+            }
+            for p in all_products
+        ]
+
         # Generate recommendations
-        result = ai_service.generate_recommendations(history_summary, current_cart_items)
+        result = ai_service.generate_recommendations(history_summary, current_cart_items, available_products)
 
         # Parse JSON response
         try:
@@ -209,8 +221,30 @@ def get_recommendations():
             elif '```' in result:
                 result = result.split('```')[1].split('```')[0].strip()
 
-            recommendations = json.loads(result)
-            return jsonify(recommendations), 200
+            ai_recommendations = json.loads(result)
+
+            # Enrich AI recommendations with actual product data from database
+            enriched_recommendations = []
+            if 'recommendations' in ai_recommendations:
+                for rec in ai_recommendations['recommendations']:
+                    product_name = rec.get('product', '')
+
+                    # Try to find matching product in database
+                    product = Product.query.filter(
+                        Product.name.ilike(f'%{product_name}%')
+                    ).first()
+
+                    if product:
+                        enriched_recommendations.append({
+                            "id": product.id,
+                            "name": product.name,
+                            "price": product.price,
+                            "barcode": product.barcode,
+                            "category": product.category,
+                            "reason": rec.get('reason', '')
+                        })
+
+            return jsonify({"recommendations": enriched_recommendations}), 200
 
         except json.JSONDecodeError:
             return jsonify({"recommendations": [], "error": "Failed to parse recommendations"}), 200
@@ -235,7 +269,7 @@ def fraud_check():
         scan_data = data.get('scan_data', {})
         user_behavior = data.get('behavior', {})
 
-        # Call Gemini Fraud Detection
+        # Call OpenAI Fraud Detection
         result = ai_service.detect_fraud_patterns(scan_data, user_behavior)
 
         # Parse JSON response
