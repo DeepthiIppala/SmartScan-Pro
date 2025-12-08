@@ -125,7 +125,7 @@
 - Categories: Clothing, Footwear, Handbags, Kitchen, Home, Grocery
 
 **AI & Services:**
-- OpenAI GPT-4o-mini (product recognition, visual search, chat)
+- Openai  (product recognition, visual search)
 - Stripe Payment Processing (production-ready)
 - QR Code generation (Exit Pass)
 
@@ -321,14 +321,14 @@
        │
    ┌───┴───┬────────┬──────────┐
    ↓       ↓        ↓          ↓
-[Database] [Stripe] [OpenAI] [QR Code]
+[Database] [Stripe] [Gemini] [QR Code]
 ```
 
 **Key Components:**
 - **JWT Authentication** - Secure user sessions
 - **SQLAlchemy ORM** - Database management
 - **Stripe SDK** - Payment processing
-- **OpenAI API** - Visual recognition, chat, & recommendations
+- **Google Gemini AI** - Visual recognition & search
 - **QR Code Library** - Exit pass generation
 
 **Scalability:**
@@ -432,7 +432,7 @@
 | Category | Amount | Purpose |
 |----------|--------|---------|
 | **Development Team** | $60,000 | 2 developers × 6 months |
-| **AI/Cloud Services** | $20,000 | OpenAI API, hosting (AWS) |
+| **AI/Cloud Services** | $20,000 | Gemini API, hosting (AWS) |
 | **Hardware** | $30,000 | Tablets for security (QR scanning) |
 | **Marketing** | $15,000 | In-store signage, app promo |
 | **Pilot Program** | $15,000 | 5 stores × $3K setup each |
@@ -460,17 +460,17 @@
 **[Your Name]** - Lead Developer & Product Manager
 - Expertise: Full-stack development, AI integration
 - Built SmartScan Pro from concept to working prototype
-- Technologies: React, Python, Stripe, OpenAI API
+- Technologies: React, Python, Stripe, Gemini AI
 
 **Advisors:**
 - **Retail Operations Expert** - 15 years at Marshall's
-- **AI/ML Consultant** - AI integration specialist
+- **AI/ML Consultant** - Former Google engineer
 - **Payment Security Specialist** - PCI compliance certified
 
 **Skills Demonstrated:**
 - ✅ **Backend:** Python Flask, RESTful APIs, JWT auth
 - ✅ **Frontend:** React/Next.js, TypeScript, responsive design
-- ✅ **AI Integration:** OpenAI GPT-4o-mini vision & text models
+- ✅ **AI Integration:** Google Gemini vision & text models
 - ✅ **Payments:** Stripe integration, PCI compliance
 - ✅ **Database:** SQLAlchemy, schema design, migrations
 - ✅ **Security:** Encryption, QR code verification

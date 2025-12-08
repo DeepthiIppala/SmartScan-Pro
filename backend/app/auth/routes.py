@@ -13,12 +13,24 @@ def register():
         return jsonify({"msg": "Missing email or password"}), 400
     if User.query.filter_by(email=data['email']).first():
         return jsonify({"msg": "Email already exists"}), 409
-    
+
     new_user = User(email=data['email'])
     new_user.set_password(data['password'])
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({"msg": "User registered successfully"}), 201
+
+    # Auto-login after registration
+    access_token = create_access_token(identity=str(new_user.id), additional_claims={"is_admin": new_user.is_admin})
+    print(f"[DEBUG] User {new_user.id} ({new_user.email}) registered and logged in")
+
+    return jsonify(
+        access_token=access_token,
+        user={
+            "id": new_user.id,
+            "email": new_user.email,
+            "is_admin": new_user.is_admin
+        }
+    ), 201
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -26,7 +38,9 @@ def login():
     user = User.query.filter_by(email=data.get('email')).first()
     if user and user.check_password(data.get('password')):
         access_token = create_access_token(identity=str(user.id), additional_claims={"is_admin": user.is_admin})
+        print(f"[DEBUG] User {user.id} ({user.email}) logged in successfully")
         return jsonify(access_token=access_token)
+    print(f"[DEBUG] Failed login attempt for email: {data.get('email')}")
     return jsonify({"msg": "Bad email or password"}), 401
 
 @auth_bp.route('/logout', methods=['DELETE'])
