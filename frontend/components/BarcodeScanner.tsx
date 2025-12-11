@@ -18,7 +18,6 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
   const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasCalledOnScanRef = useRef(false);
   const isScanningActiveRef = useRef(false);
-  const controlsRef = useRef<{ stop: () => void } | null>(null);
 
   const playBeep = () => {
     try {
@@ -89,8 +88,8 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
       codeReaderRef.current = codeReader;
 
       console.log('Requesting camera access...');
-      const controls = await codeReader.decodeFromVideoDevice(
-        undefined, // Use default camera
+      await codeReader.decodeFromVideoDevice(
+        null, // Use default camera
         videoRef.current,
         (result, error) => {
           // Log scanning attempts for debugging
@@ -140,30 +139,29 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
         }
       );
 
-      // Store controls to stop scanning later
-      controlsRef.current = controls;
       console.log('Barcode scanner started successfully');
       toast.success('Camera scanner started! Point at a barcode.');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { name?: string; message?: string };
       console.error('Failed to start scanner:', error);
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
+      console.error('Error name:', err.name);
+      console.error('Error message:', err.message);
 
       // Provide specific error messages
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         toast.error('Camera access denied. Please allow camera permissions in your browser settings.');
-      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
         toast.error('No camera found on this device.');
-      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
         toast.error('Camera is already in use by another application.');
-      } else if (error.name === 'OverconstrainedError') {
+      } else if (err.name === 'OverconstrainedError') {
         toast.error('Camera constraints cannot be satisfied.');
-      } else if (error.message?.includes('https') || error.message?.includes('secure')) {
+      } else if (err.message?.includes('https') || err.message?.includes('secure')) {
         toast.error('Camera requires HTTPS connection. Please use https:// or localhost.');
-      } else if (error.message?.includes('getUserMedia')) {
+      } else if (err.message?.includes('getUserMedia')) {
         toast.error('Camera access not supported. Please use HTTPS or localhost, or try a different browser.');
       } else {
-        toast.error(`Failed to start camera: ${error.message || 'Unknown error'}`);
+        toast.error(`Failed to start camera: ${err.message || 'Unknown error'}`);
       }
 
       setIsScanning(false);
@@ -174,16 +172,6 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
   const stopScanner = () => {
     // IMMEDIATELY disable scanning
     isScanningActiveRef.current = false;
-
-    // Stop using controls if available
-    if (controlsRef.current) {
-      try {
-        controlsRef.current.stop();
-        controlsRef.current = null;
-      } catch (error) {
-        console.error('Error stopping controls:', error);
-      }
-    }
 
     // Stop the video stream
     const videoElement = videoRef.current;

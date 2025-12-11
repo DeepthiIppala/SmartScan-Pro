@@ -51,17 +51,18 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
         console.error('Video ref is null');
         setShowCamera(false);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Camera error:', error);
 
       // Provide specific error messages
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+      const err = error as { name?: string; message?: string };
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         toast.error('Camera access denied. Please allow camera permissions in your browser settings.');
-      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
         toast.error('No camera found on this device.');
-      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
         toast.error('Camera is already in use by another application.');
-      } else if (error.message?.includes('https') || error.message?.includes('secure')) {
+      } else if (err.message?.includes('https') || err.message?.includes('secure')) {
         toast.error('Camera requires HTTPS connection. Please use https:// or localhost.');
       } else {
         toast.error('Could not access camera. Please check your browser permissions.');
