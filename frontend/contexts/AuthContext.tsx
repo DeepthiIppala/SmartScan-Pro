@@ -10,7 +10,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -52,18 +52,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authAPI.login(email, password);
       setUser(response.user);
-      router.push('/products');
+      router.push('/home');
     } catch (error) {
       throw error;
     }
   };
 
-  const register = async (email: string, password: string) => {
+  const register = async (email: string, password: string, firstName?: string, lastName?: string) => {
     try {
-      const response = await authAPI.register(email, password);
-      setUser(response.user);
-      toast.success('Registration successful! Welcome to SmartScan Pro!');
-      router.push('/products');
+      await authAPI.register(email, password, firstName, lastName);
+      toast.success('Registration successful! Please log in.');
+      router.push('/login');
     } catch (error) {
       throw error;
     }

@@ -98,7 +98,7 @@ export default function CheckoutForm({ paymentIntentId, amount }: CheckoutFormPr
       <button
         type="submit"
         disabled={!stripe || isProcessing}
-        className="w-full px-6 py-4 bg-green-600 text-white text-lg font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+        className="w-full px-6 py-4 bg-[#4169E1] text-white text-lg font-semibold rounded-lg hover:bg-[#3557C1] focus:outline-none focus:ring-2 focus:ring-[#4169E1] disabled:bg-gray-600 disabled:cursor-not-allowed transition-all"
       >
         {isProcessing ? (
           <span className="flex items-center justify-center gap-2">

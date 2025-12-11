@@ -69,7 +69,7 @@ export default function AIShoppingAssistant() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 z-50"
+          className="fixed bottom-6 right-6 bg-gradient-to-r from-[#4169E1] to-[#3557C1] text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 z-50"
           title="AI Shopping Assistant"
         >
           <svg
@@ -94,13 +94,13 @@ export default function AIShoppingAssistant() {
       {isOpen && (
         <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-lg shadow-2xl flex flex-col z-50 border border-gray-200">
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 rounded-t-lg flex items-center justify-between">
+          <div className="bg-gradient-to-r from-[#4169E1] to-[#3557C1] text-white p-4 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative">
                 <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-purple-600"
+                    className="h-6 w-6 text-[#4169E1]"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -146,7 +146,7 @@ export default function AIShoppingAssistant() {
                 <div
                   className={`max-w-[80%] p-3 rounded-lg ${
                     message.role === 'user'
-                      ? 'bg-purple-600 text-white rounded-br-none'
+                      ? 'bg-[#4169E1] text-white rounded-br-none'
                       : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
                   }`}
                 >
@@ -180,7 +180,7 @@ export default function AIShoppingAssistant() {
                 placeholder="Ask me anything..."
                 disabled={isLoading}
                 rows={1}
-                className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 text-gray-900 placeholder:text-gray-500 resize-none overflow-hidden min-h-[40px] max-h-[120px]"
+                className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#4169E1] disabled:opacity-50 text-gray-900 placeholder:text-gray-500 resize-none overflow-hidden min-h-[40px] max-h-[120px]"
                 style={{
                   height: 'auto',
                   overflowY: input.split('\n').length > 3 ? 'auto' : 'hidden'
@@ -194,7 +194,7 @@ export default function AIShoppingAssistant() {
               <button
                 onClick={sendMessage}
                 disabled={isLoading || !input.trim()}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                className="bg-[#4169E1] hover:bg-[#3557C1] text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

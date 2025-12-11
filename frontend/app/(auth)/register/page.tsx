@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
 export default function RegisterPage() {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -51,7 +53,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await register(email, password);
+      await register(email, password, firstName, lastName);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to register');
     } finally {
@@ -60,103 +62,174 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            SmartScan Pro
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full">
+        {/* Logo and Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#4169E1] rounded-xl mb-4">
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+            </svg>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900">
+            Join SmartScan Pro
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Create your account
+          <p className="mt-2 text-sm text-gray-600">
+            Start your smart shopping journey today
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email-address" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Password (min 8 chars, 1 uppercase, 1 number, 1 special)"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="confirm-password" className="sr-only">
-                Confirm Password
-              </label>
-              <input
-                id="confirm-password"
-                name="confirm-password"
-                type="password"
-                autoComplete="new-password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Confirm password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
-          </div>
 
-          <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded">
-            <p className="font-semibold mb-1">Password Requirements:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Minimum 8 characters</li>
-              <li>At least one uppercase letter (A-Z)</li>
-              <li>At least one lowercase letter (a-z)</li>
-              <li>At least one number (0-9)</li>
-              <li>At least one special character (!@#$%^&* etc.)</li>
-            </ul>
-          </div>
+        {/* Register Form Card */}
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            {error && (
+              <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded">
+                <p className="text-sm">{error}</p>
+              </div>
+            )}
 
-          <div>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="first-name" className="block text-sm font-medium text-gray-700 mb-2">
+                    First Name
+                  </label>
+                  <input
+                    id="first-name"
+                    name="firstName"
+                    type="text"
+                    autoComplete="given-name"
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4169E1] focus:border-transparent transition"
+                    placeholder="First name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="last-name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Last Name
+                  </label>
+                  <input
+                    id="last-name"
+                    name="lastName"
+                    type="text"
+                    autoComplete="family-name"
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4169E1] focus:border-transparent transition"
+                    placeholder="Last name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email address
+                </label>
+                <input
+                  id="email-address"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4169E1] focus:border-transparent transition"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4169E1] focus:border-transparent transition"
+                  placeholder="Create a password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  id="confirm-password"
+                  name="confirm-password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4169E1] focus:border-transparent transition"
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-xs font-semibold text-gray-900 mb-2">Password must include:</p>
+              <ul className="text-xs text-[#3557C1] space-y-1">
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4169E1]">•</span> At least 8 characters
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4169E1]">•</span> One uppercase & lowercase letter
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4169E1]">•</span> One number & special character
+                </li>
+              </ul>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+              className="w-full flex justify-center items-center gap-2 py-3 px-4 bg-[#4169E1] hover:bg-[#3557C1] text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all focus:outline-none focus:ring-2 focus:ring-[#4169E1] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {loading ? 'Creating account...' : 'Register'}
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Creating account...</span>
+                </>
+              ) : (
+                'Create Account'
+              )}
             </button>
-          </div>
 
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                Sign in here
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white text-gray-500">Already have an account?</span>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center w-full py-3 px-4 border-2 border-[#4169E1] text-[#4169E1] font-semibold rounded-lg hover:bg-blue-50 transition-all"
+              >
+                Sign in instead
               </Link>
-            </p>
-          </div>
-        </form>
+            </div>
+          </form>
+        </div>
+
+        {/* Footer */}
+        <p className="mt-6 text-center text-xs text-gray-500">
+          By creating an account, you agree to our Terms & Privacy Policy
+        </p>
       </div>
     </div>
   );

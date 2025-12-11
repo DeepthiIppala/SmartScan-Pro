@@ -7,7 +7,11 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
+    first_name = db.Column(db.String(50), nullable=True)
+    last_name = db.Column(db.String(50), nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
+    reset_token = db.Column(db.String(255), nullable=True)
+    reset_token_expires = db.Column(db.DateTime, nullable=True)
     cart = db.relationship('Cart', backref='user', uselist=False, cascade="all, delete-orphan")
     transactions = db.relationship('Transaction', backref='user', lazy='dynamic')
 
@@ -25,6 +29,7 @@ class Product(db.Model):
     price = db.Column(db.Float, nullable=False)
     category = db.Column(db.String(50), nullable=True)
     description = db.Column(db.Text, nullable=True)
+    image_url = db.Column(db.String(500), nullable=True)
 
 class Cart(db.Model):
     __tablename__ = 'carts'

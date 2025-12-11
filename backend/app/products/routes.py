@@ -8,14 +8,30 @@ product_bp = Blueprint('products', __name__)
 @product_bp.route('', methods=['GET'])
 def get_products():
     products = Product.query.all()
-    return jsonify([{"id": p.id, "barcode": p.barcode, "name": p.name, "price": p.price} for p in products])
+    return jsonify([{
+        "id": p.id,
+        "barcode": p.barcode,
+        "name": p.name,
+        "price": p.price,
+        "category": p.category,
+        "description": p.description,
+        "image_url": p.image_url
+    } for p in products])
 
 @product_bp.route('/<string:barcode>', methods=['GET'])
 def get_product_by_barcode(barcode):
     product = Product.query.filter_by(barcode=barcode).first()
     if not product:
         return jsonify({"error": "Product not found"}), 404
-    return jsonify({"id": product.id, "barcode": product.barcode, "name": product.name, "price": product.price})
+    return jsonify({
+        "id": product.id,
+        "barcode": product.barcode,
+        "name": product.name,
+        "price": product.price,
+        "category": product.category,
+        "description": product.description,
+        "image_url": product.image_url
+    })
 
 @product_bp.route('', methods=['POST'])
 @admin_required()

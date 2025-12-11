@@ -51,9 +51,22 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
         console.error('Video ref is null');
         setShowCamera(false);
       }
-    } catch (error) {
-      toast.error('Could not access camera');
+    } catch (error: any) {
       console.error('Camera error:', error);
+
+      // Provide specific error messages
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        toast.error('Camera access denied. Please allow camera permissions in your browser settings.');
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        toast.error('No camera found on this device.');
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        toast.error('Camera is already in use by another application.');
+      } else if (error.message?.includes('https') || error.message?.includes('secure')) {
+        toast.error('Camera requires HTTPS connection. Please use https:// or localhost.');
+      } else {
+        toast.error('Could not access camera. Please check your browser permissions.');
+      }
+
       setShowCamera(false);
     }
   };
@@ -198,9 +211,8 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
   };
 
   return (
-    <div className="bg-gray-800 shadow rounded-lg p-6 mb-6 border border-gray-700">
-      <h2 className="text-xl font-bold text-white mb-4">AI Product Recognition</h2>
-      <p className="text-sm text-gray-300 mb-4">
+    <div className="space-y-4">
+      <p className="text-sm text-gray-600">
         Can&apos;t scan the barcode? Take a photo and let AI identify the product!
       </p>
 
@@ -209,7 +221,7 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
           <button
             onClick={startCamera}
             disabled={isProcessing}
-            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 bg-white hover:bg-gray-50 text-[#4169E1] border-2 border-[#4169E1] font-semibold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -221,7 +233,7 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isProcessing}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 bg-white hover:bg-gray-50 text-[#4169E1] border-2 border-[#4169E1] font-semibold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -250,13 +262,13 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
             <button
               onClick={capturePhoto}
               disabled={isProcessing}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg disabled:opacity-50"
+              className="flex-1 bg-white hover:bg-gray-50 text-[#4169E1] border-2 border-[#4169E1] font-semibold py-3 px-4 rounded-lg disabled:opacity-50 transition-all shadow-md hover:shadow-lg"
             >
               Capture Photo
             </button>
             <button
               onClick={stopCamera}
-              className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg"
+              className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 font-semibold py-3 px-4 rounded-lg transition-all shadow-md hover:shadow-lg"
             >
               Cancel
             </button>
@@ -268,31 +280,31 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
 
       {isProcessing && (
         <div className="mt-4 text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-          <p className="text-sm text-gray-300 mt-2">AI is analyzing the image...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#4169E1]"></div>
+          <p className="text-sm text-gray-600 mt-2">AI is analyzing the image...</p>
         </div>
       )}
 
       {/* AI Recognition Results */}
       {recognizedProduct && (
-        <div className="mt-4 bg-gradient-to-r from-purple-900 to-indigo-900 border border-purple-500 rounded-lg p-4">
+        <div className="mt-4 bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-[#4169E1] rounded-lg p-4">
           <div className="flex justify-between items-start mb-3">
             <div>
-              <h3 className="text-lg font-bold text-white mb-1">AI Identified:</h3>
-              <p className="text-xl font-semibold text-purple-300">{recognizedProduct.product_name}</p>
-              <p className="text-sm text-gray-300 mt-1">
+              <h3 className="text-lg font-bold text-gray-900 mb-1">AI Identified:</h3>
+              <p className="text-xl font-semibold text-[#4169E1]">{recognizedProduct.product_name}</p>
+              <p className="text-sm text-gray-700 mt-1">
                 Confidence: {(recognizedProduct.confidence * 100).toFixed(0)}%
               </p>
               {recognizedProduct.category && (
-                <p className="text-sm text-gray-400">Category: {recognizedProduct.category}</p>
+                <p className="text-sm text-gray-600">Category: {recognizedProduct.category}</p>
               )}
               {recognizedProduct.description && (
-                <p className="text-sm text-gray-400 mt-1">{recognizedProduct.description}</p>
+                <p className="text-sm text-gray-600 mt-1">{recognizedProduct.description}</p>
               )}
             </div>
             <button
               onClick={clearResults}
-              className="text-gray-400 hover:text-white text-xl"
+              className="text-gray-400 hover:text-gray-900 text-xl"
               title="Clear results"
             >
               ×
@@ -301,28 +313,28 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
 
           {searchingDatabase ? (
             <div className="text-center py-3">
-              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400"></div>
-              <p className="text-sm text-gray-300 mt-2">Searching database...</p>
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-[#4169E1]"></div>
+              <p className="text-sm text-gray-600 mt-2">Searching database...</p>
             </div>
           ) : matchedProducts.length > 0 ? (
             <div>
-              <h4 className="text-md font-semibold text-white mb-2">
+              <h4 className="text-md font-semibold text-gray-900 mb-2">
                 Found {matchedProducts.length} matching product{matchedProducts.length > 1 ? 's' : ''} in database:
               </h4>
               <div className="space-y-2">
                 {matchedProducts.map((product) => (
                   <div
                     key={product.id}
-                    className="bg-gray-800 border border-gray-700 rounded p-3 flex justify-between items-center"
+                    className="bg-white border-2 border-gray-200 rounded p-3 flex justify-between items-center shadow-sm"
                   >
                     <div>
-                      <p className="font-semibold text-white">{product.name}</p>
-                      <p className="text-sm text-gray-400">Barcode: {product.barcode}</p>
-                      <p className="text-lg font-bold text-green-400 mt-1">${product.price.toFixed(2)}</p>
+                      <p className="font-semibold text-gray-900">{product.name}</p>
+                      <p className="text-sm text-gray-600">Barcode: {product.barcode}</p>
+                      <p className="text-lg font-bold text-[#4169E1] mt-1">${product.price.toFixed(2)}</p>
                     </div>
                     <button
                       onClick={() => handleAddToCart(product)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold"
+                      className="bg-[#4169E1] hover:bg-[#3557C1] text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all"
                     >
                       Add to Cart
                     </button>
@@ -331,9 +343,9 @@ export default function AIProductRecognition({ onProductRecognized }: AIProductR
               </div>
             </div>
           ) : (
-            <div className="bg-yellow-900 border border-yellow-600 rounded p-3 text-center">
-              <p className="text-yellow-200 font-semibold">Product not found in database</p>
-              <p className="text-sm text-yellow-300 mt-1">
+            <div className="bg-yellow-50 border-2 border-yellow-400 rounded p-3 text-center">
+              <p className="text-yellow-800 font-semibold">Product not found in database</p>
+              <p className="text-sm text-yellow-700 mt-1">
                 This product needs to be added to the database with a barcode and price first.
               </p>
             </div>

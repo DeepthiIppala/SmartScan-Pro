@@ -31,13 +31,13 @@ export default function AIRecommendations() {
   };
 
   return (
-    <div className="bg-gradient-to-r from-indigo-900 to-purple-900 rounded-lg p-6 mb-6 border border-indigo-500">
+    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-6 mb-6 border border-[#4169E1]">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-2 rounded-lg">
+          <div className="bg-gradient-to-r from-[#4169E1] to-[#3557C1] p-2 rounded-lg">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-white"
+              className="h-6 w-6 text-black"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -51,8 +51,8 @@ export default function AIRecommendations() {
             </svg>
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">AI-Powered Recommendations</h3>
-            <p className="text-sm text-gray-300">Personalized product suggestions based on your shopping history</p>
+            <h3 className="text-lg font-bold text-black">AI-Powered Recommendations</h3>
+            <p className="text-sm text-black-300">Personalized product suggestions based on your shopping history</p>
           </div>
         </div>
 
@@ -60,7 +60,7 @@ export default function AIRecommendations() {
           <button
             onClick={loadRecommendations}
             disabled={loading}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="bg-gradient-to-r from-[#4169E1] to-[#3557C1] hover:from-[#3557C1] hover:to-[#2A47A8] text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading ? (
               <>
@@ -95,10 +95,10 @@ export default function AIRecommendations() {
           {recommendations.map((product, index) => (
             <div
               key={product.id}
-              className="bg-gray-800 rounded-lg p-4 shadow-sm border border-indigo-500 hover:shadow-md transition-shadow"
+              className="bg-[#4169E1] rounded-lg p-4 shadow-sm border border-[#4169E1] hover:shadow-md transition-shadow"
             >
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-[#4169E1] to-[#3557C1] rounded-full flex items-center justify-center text-white font-bold">
                   {index + 1}
                 </div>
                 <div className="flex-1">

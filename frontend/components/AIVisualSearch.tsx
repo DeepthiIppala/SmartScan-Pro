@@ -93,7 +93,7 @@ export default function AIVisualSearch() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-24 right-6 bg-gradient-to-r from-pink-600 to-purple-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 z-40"
+          className="fixed bottom-24 right-6 bg-gradient-to-r from-[#4169E1] to-[#3557C1] text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 z-40"
           title="AI Visual Search"
         >
           <svg
@@ -116,14 +116,14 @@ export default function AIVisualSearch() {
 
       {/* Search Modal */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-[480px] h-[700px] bg-gray-800 rounded-lg shadow-2xl flex flex-col z-50 border-2 border-pink-500">
+        <div className="fixed bottom-6 right-6 w-[480px] h-[700px] bg-[#4169E1] rounded-lg shadow-2xl flex flex-col z-50 border-2 border-[#4169E1]">
           {/* Header */}
-          <div className="bg-gradient-to-r from-pink-600 to-purple-600 text-white p-4 rounded-t-lg flex items-center justify-between">
+          <div className="bg-gradient-to-r from-[#4169E1] to-[#3557C1] text-white p-4 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-purple-600"
+                  className="h-6 w-6 text-[#4169E1]"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -163,11 +163,11 @@ export default function AIVisualSearch() {
             {!previewImage && (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-purple-500 rounded-lg p-8 text-center cursor-pointer hover:bg-gray-700 transition-colors"
+                className="border-2 border-dashed border-[#4169E1] rounded-lg p-8 text-center cursor-pointer hover:bg-gray-700 transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-16 w-16 mx-auto text-purple-500 mb-4"
+                  className="h-16 w-16 mx-auto text-[#4169E1] mb-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -203,7 +203,7 @@ export default function AIVisualSearch() {
                   <img
                     src={previewImage}
                     alt="Search query"
-                    className="w-full h-48 object-cover rounded-lg border-2 border-purple-500"
+                    className="w-full h-48 object-cover rounded-lg border-2 border-[#4169E1]"
                   />
                   <button
                     onClick={clearSearch}
@@ -217,14 +217,14 @@ export default function AIVisualSearch() {
 
                 {uploading && (
                   <div className="text-center py-8">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#4169E1] border-t-transparent"></div>
                     <p className="text-white mt-4">Searching with AI...</p>
                   </div>
                 )}
 
                 {/* Results Summary */}
                 {searchResults && !uploading && searchResults.products.length > 0 && (
-                  <div className="bg-gradient-to-r from-purple-900 to-pink-900 border border-purple-500 rounded-lg p-4">
+                  <div className="bg-gradient-to-r from-blue-100 to-cyan-100 border border-[#4169E1] rounded-lg p-4">
                     <p className="text-gray-300 text-sm mb-1">Search Results:</p>
                     <p className="text-white font-bold text-lg">Found {searchResults.matches} matching products</p>
                   </div>
@@ -240,7 +240,7 @@ export default function AIVisualSearch() {
                       {searchResults.products.map((product) => (
                         <div
                           key={product.id}
-                          className="bg-gray-900 border border-gray-700 rounded-lg p-4 hover:border-purple-500 transition-colors"
+                          className="bg-[#3557C1] border border-gray-700 rounded-lg p-4 hover:border-[#4169E1] transition-colors"
                         >
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex-1">
@@ -277,23 +277,23 @@ export default function AIVisualSearch() {
 
             {/* Info */}
             {!previewImage && (
-              <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+              <div className="bg-[#3557C1] border border-gray-700 rounded-lg p-4">
                 <h4 className="text-white font-bold mb-2">How it works:</h4>
                 <ul className="text-gray-300 text-sm space-y-2">
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-500">1.</span>
+                    <span className="text-[#4169E1]">1.</span>
                     <span>Upload any photo of clothing, accessories, or home goods</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-500">2.</span>
+                    <span className="text-[#4169E1]">2.</span>
                     <span>Our AI analyzes the image and identifies the items</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-500">3.</span>
+                    <span className="text-[#4169E1]">3.</span>
                     <span>Find similar products instantly in our inventory</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-500">4.</span>
+                    <span className="text-[#4169E1]">4.</span>
                     <span>Add to cart and checkout - all in seconds!</span>
                   </li>
                 </ul>
