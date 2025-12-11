@@ -6,9 +6,6 @@ Product images/
 
 # Ignore specific files
 AI_FEATURES.md
-ARCHITECTURE.md
-PRESENTATION_OUTLINE.md
-bash.exe.stackdump
 
 # environment files
 .env

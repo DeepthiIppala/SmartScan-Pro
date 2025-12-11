@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { BrowserMultiFormatReader } from '@zxing/browser';
+import { BrowserMultiFormatReader } from '@zxing/library';
 import { DecodeHintType, BarcodeFormat } from '@zxing/library';
 import toast from 'react-hot-toast';
 
@@ -43,9 +43,13 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
   };
 
   const startScanner = async () => {
-    if (isScanning || isScanningActiveRef.current) return;
+    if (isScanning || isScanningActiveRef.current) {
+      console.log('Scanner already active, ignoring start request');
+      return;
+    }
 
     try {
+      console.log('Starting barcode scanner...');
       setIsScanning(true);
       isScanningActiveRef.current = true;
 
@@ -53,11 +57,14 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       if (!videoRef.current) {
+        console.error('Video element not found');
         setIsScanning(false);
         isScanningActiveRef.current = false;
-        toast.error('Video element not ready');
+        toast.error('Video element not ready. Please try again.');
         return;
       }
+
+      console.log('Video element ready, initializing scanner...');
 
       // Enable all barcode formats for maximum compatibility
       const hints = new Map();
@@ -81,6 +88,7 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
       const codeReader = new BrowserMultiFormatReader(hints);
       codeReaderRef.current = codeReader;
 
+      console.log('Requesting camera access...');
       const controls = await codeReader.decodeFromVideoDevice(
         undefined, // Use default camera
         videoRef.current,
@@ -134,9 +142,30 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
 
       // Store controls to stop scanning later
       controlsRef.current = controls;
-    } catch (error) {
+      console.log('Barcode scanner started successfully');
+      toast.success('Camera scanner started! Point at a barcode.');
+    } catch (error: any) {
       console.error('Failed to start scanner:', error);
-      toast.error('Failed to start camera');
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+
+      // Provide specific error messages
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        toast.error('Camera access denied. Please allow camera permissions in your browser settings.');
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        toast.error('No camera found on this device.');
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        toast.error('Camera is already in use by another application.');
+      } else if (error.name === 'OverconstrainedError') {
+        toast.error('Camera constraints cannot be satisfied.');
+      } else if (error.message?.includes('https') || error.message?.includes('secure')) {
+        toast.error('Camera requires HTTPS connection. Please use https:// or localhost.');
+      } else if (error.message?.includes('getUserMedia')) {
+        toast.error('Camera access not supported. Please use HTTPS or localhost, or try a different browser.');
+      } else {
+        toast.error(`Failed to start camera: ${error.message || 'Unknown error'}`);
+      }
+
       setIsScanning(false);
       isScanningActiveRef.current = false;
     }
@@ -204,22 +233,21 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
   }, []);
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Scan Product</h3>
-
+    <div>
       {/* Manual Input */}
       <form onSubmit={handleManualSubmit} className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Enter Barcode</label>
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Enter barcode manually"
+            placeholder="Type barcode number"
             value={manualBarcode}
             onChange={(e) => setManualBarcode(e.target.value)}
-            className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-900 placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4169E1] focus:border-[#4169E1] transition-all"
           />
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-6 py-2.5 bg-[#4169E1] text-white font-medium rounded-lg hover:bg-[#3557C1] focus:outline-none focus:ring-2 focus:ring-gray-700 transition-all"
           >
             Add
           </button>
@@ -227,12 +255,16 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
       </form>
 
       {/* Camera Scanner */}
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+      <div className="border-t border-gray-200 pt-4 mt-4">
         {!isScanning ? (
           <button
             onClick={startScanner}
-            className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-4 py-3 bg-[#4169E1] text-white font-medium rounded-lg hover:bg-[#3557C1] focus:outline-none focus:ring-2 focus:ring-gray-700 transition-all flex items-center justify-center gap-2"
           >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
             Start Camera Scanner
           </button>
         ) : (
@@ -242,12 +274,13 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
               autoPlay
               playsInline
               muted
-              className="w-full rounded-lg mb-4 bg-black"
+              className="w-full rounded-lg mb-3 bg-black border-2 border-gray-700"
               style={{ minHeight: '300px', maxHeight: '400px' }}
             />
+            <p className="text-center text-sm text-gray-600 mb-3">Position barcode within frame</p>
             <button
               onClick={stopScanner}
-              className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full px-4 py-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all"
             >
               Stop Scanner
             </button>
