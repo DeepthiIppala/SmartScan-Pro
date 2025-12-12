@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { api } from '@/lib/api';
 import { Product } from '@/lib/types';
 import toast from 'react-hot-toast';
@@ -200,9 +201,12 @@ export default function AIVisualSearch() {
               <div className="space-y-4">
                 {/* Image Preview */}
                 <div className="relative">
-                  <img
+                  <Image
                     src={previewImage}
                     alt="Search query"
+                    width={800}
+                    height={400}
+                    unoptimized
                     className="w-full h-48 object-cover rounded-lg border-2 border-[#4169E1]"
                   />
                   <button

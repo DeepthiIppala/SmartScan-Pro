@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Transaction } from '@/lib/types';
 import { api } from '@/lib/api';
@@ -13,15 +14,7 @@ function PaymentSuccessContent() {
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (transactionId) {
-      loadTransaction();
-    } else {
-      setLoading(false);
-    }
-  }, [transactionId]);
-
-  const loadTransaction = async () => {
+  const loadTransaction = useCallback(async () => {
     try {
       const transactions = await api.transactions.getHistory();
       const found = transactions.find((t) => t.id === parseInt(transactionId!));
@@ -33,7 +26,15 @@ function PaymentSuccessContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [transactionId]);
+
+  useEffect(() => {
+    if (transactionId) {
+      loadTransaction();
+    } else {
+      setLoading(false);
+    }
+  }, [transactionId, loadTransaction]);
 
   return (
     <ProtectedRoute>
@@ -139,9 +140,12 @@ function PaymentSuccessContent() {
                   </div>
 
                   <div className="bg-white p-6 rounded-lg inline-block mb-4">
-                    <img
+                    <Image
                       src={transaction.qr_code}
                       alt="Exit Pass QR Code"
+                      width={256}
+                      height={256}
+                      unoptimized
                       className="w-64 h-64 mx-auto"
                     />
                   </div>

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
-import toast from 'react-hot-toast';
 import { api } from '@/lib/api';
 
 interface UserStats {
@@ -17,7 +16,6 @@ interface UserStats {
 export default function ProfilePage() {
   const { user, isAdmin, logout } = useAuth();
   const router = useRouter();
-  const [isEditing, setIsEditing] = useState(false);
   const [userStats, setUserStats] = useState<UserStats>({
     totalOrders: 0,
     totalSpent: 0,

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -13,7 +12,6 @@ import toast from 'react-hot-toast';
 
 export default function ProductsPage() {
   const { user } = useAuth();
-  const router = useRouter();
   const [cartItemCount, setCartItemCount] = useState(0);
   const processingBarcodeRef = useRef<string | null>(null);
   const isProcessingRef = useRef<boolean>(false);

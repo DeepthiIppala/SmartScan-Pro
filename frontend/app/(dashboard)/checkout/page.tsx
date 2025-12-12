@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
@@ -19,21 +19,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const hasInitialized = useRef(false);
 
-  useEffect(() => {
-    // Prevent double initialization in React Strict Mode
-    if (hasInitialized.current) return;
-    hasInitialized.current = true;
-
-    // Load Stripe configuration
-    api.payments.getConfig().then((config) => {
-      setStripePromise(loadStripe(config.publishableKey));
-    });
-
-    // Load cart and create payment intent
-    initializeCheckout();
-  }, []);
-
-  const initializeCheckout = async () => {
+  const initializeCheckout = useCallback(async () => {
     try {
       // Load cart
       const cartData = await api.cart.get();
@@ -58,7 +44,21 @@ export default function CheckoutPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    // Prevent double initialization in React Strict Mode
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
+    // Load Stripe configuration
+    api.payments.getConfig().then((config) => {
+      setStripePromise(loadStripe(config.publishableKey));
+    });
+
+    // Load cart and create payment intent
+    initializeCheckout();
+  }, [initializeCheckout]);
 
   const cartTotal = cart?.items.reduce(
     (total, item) => total + item.product.price * item.quantity,
