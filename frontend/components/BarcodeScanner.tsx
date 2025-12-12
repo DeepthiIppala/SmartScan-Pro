@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { BrowserMultiFormatReader, Result } from '@zxing/browser';
-import { DecodeHintType, BarcodeFormat } from '@zxing/library';
+import { BrowserMultiFormatReader } from '@zxing/browser';
+import { Result, DecodeHintType, BarcodeFormat } from '@zxing/library';
 import toast from 'react-hot-toast';
 
 interface BarcodeScannerProps {

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ProductCard from '@/components/ProductCard';
@@ -25,12 +24,9 @@ export default function BrowseProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'price-low' | 'price-high'>('name');
-  const [cartItemCount, setCartItemCount] = useState(0);
-  const router = useRouter();
 
   useEffect(() => {
     loadProducts();
-    loadCartCount();
   }, []);
 
   const loadProducts = async () => {
@@ -47,21 +43,10 @@ export default function BrowseProductsPage() {
     }
   };
 
-  const loadCartCount = async () => {
-    try {
-      const cart = await api.cart.get();
-      const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-      setCartItemCount(totalItems);
-    } catch (error) {
-      console.error('Failed to load cart count', error);
-    }
-  };
-
   const handleAddToCart = async (product: Product) => {
     try {
       await api.cart.addItem(product.barcode, 1);
       toast.success(`Added ${product.name} to cart!`);
-      loadCartCount(); // Refresh cart count
     } catch (error) {
       toast.error('Failed to add to cart');
       console.error(error);
