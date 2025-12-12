@@ -54,9 +54,9 @@ export default function Navbar() {
                   <Image
                     src="/logo4.png"
                     alt="SmartScan Pro Logo"
-                    width={100}
-                    height={100}
-                    className="rounded-xl shadow-lg group-hover:shadow-xl transition-shadow border-2 border-[#4169E1] ml-4"
+                    width={80}
+                    height={80}
+                    className="rounded-xl shadow-lg group-hover:shadow-xl transition-shadow border-2 border-[#4169E1] ml-18"
                     priority
                   />
                 </div>
@@ -67,7 +67,7 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex md:gap-4 md:ml-10">
+            <div className="hidden md:flex md:gap-7 ml-40">
               <Link
                 href="/products"
                 className={`px-5 py-3 rounded-xl text-md font-semibold transition-all ${
