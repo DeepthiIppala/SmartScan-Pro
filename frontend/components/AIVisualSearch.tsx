@@ -117,7 +117,7 @@ export default function AIVisualSearch() {
 
       {/* Search Modal */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-[480px] h-[700px] bg-[#4169E1] rounded-lg shadow-2xl flex flex-col z-50 border-2 border-[#4169E1]">
+        <div className="fixed bottom-6 right-6 w-[480px] h-[700px] bg-white rounded-lg shadow-2xl flex flex-col z-50 border border-gray-200">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#4169E1] to-[#3557C1] text-white p-4 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -159,12 +159,12 @@ export default function AIVisualSearch() {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
             {/* Upload Area */}
             {!previewImage && (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-[#4169E1] rounded-lg p-8 text-center cursor-pointer hover:bg-gray-700 transition-colors"
+                className="border-2 border-dashed border-[#4169E1] rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -180,8 +180,8 @@ export default function AIVisualSearch() {
                     d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                <p className="text-white font-semibold mb-2">Upload a Photo</p>
-                <p className="text-gray-400 text-sm">
+                <p className="text-gray-900 font-semibold mb-2">Upload a Photo</p>
+                <p className="text-gray-600 text-sm">
                   From Instagram, Pinterest, or anywhere!
                 </p>
                 <p className="text-gray-500 text-xs mt-2">Max 5MB • JPG, PNG, WEBP</p>
@@ -222,43 +222,43 @@ export default function AIVisualSearch() {
                 {uploading && (
                   <div className="text-center py-8">
                     <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#4169E1] border-t-transparent"></div>
-                    <p className="text-white mt-4">Searching with AI...</p>
+                    <p className="text-gray-700 mt-4">Searching with AI...</p>
                   </div>
                 )}
 
                 {/* Results Summary */}
                 {searchResults && !uploading && searchResults.products.length > 0 && (
                   <div className="bg-gradient-to-r from-blue-100 to-cyan-100 border border-[#4169E1] rounded-lg p-4">
-                    <p className="text-gray-300 text-sm mb-1">Search Results:</p>
-                    <p className="text-white font-bold text-lg">Found {searchResults.matches} matching products</p>
+                    <p className="text-gray-600 text-sm mb-1">Search Results:</p>
+                    <p className="text-gray-900 font-bold text-lg">Found {searchResults.matches} matching products</p>
                   </div>
                 )}
 
                 {/* Matches */}
                 {searchResults && searchResults.products.length > 0 && !uploading && (
                   <div>
-                    <h3 className="text-white font-bold mb-3">
+                    <h3 className="text-gray-900 font-bold mb-3">
                       Similar Products ({searchResults.products.length})
                     </h3>
                     <div className="space-y-3">
                       {searchResults.products.map((product) => (
                         <div
                           key={product.id}
-                          className="bg-[#3557C1] border border-gray-700 rounded-lg p-4 hover:border-[#4169E1] transition-colors"
+                          className="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:border-[#4169E1] transition-colors"
                         >
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex-1">
-                              <h4 className="text-white font-semibold">{product.name}</h4>
-                              <p className="text-gray-400 text-xs mt-1">Barcode: {product.barcode}</p>
+                              <h4 className="text-gray-900 font-semibold">{product.name}</h4>
+                              <p className="text-gray-500 text-xs mt-1">Barcode: {product.barcode}</p>
                             </div>
-                            <span className="text-green-400 font-bold text-xl ml-2">
+                            <span className="text-green-600 font-bold text-xl ml-2">
                               ${product.price.toFixed(2)}
                             </span>
                           </div>
                           <div className="flex items-center justify-end mt-3">
                             <button
                               onClick={() => handleAddToCart(product.barcode)}
-                              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                              className="bg-[#4169E1] hover:bg-[#3557C1] text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
                             >
                               Add to Cart
                             </button>
@@ -271,9 +271,9 @@ export default function AIVisualSearch() {
 
                 {/* No Matches */}
                 {searchResults && searchResults.products.length === 0 && !uploading && (
-                  <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4 text-center">
-                    <p className="text-yellow-200 font-semibold mb-2">No exact matches found</p>
-                    <p className="text-yellow-300 text-sm">Try uploading a different image or adjust the photo angle</p>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                    <p className="text-yellow-800 font-semibold mb-2">No exact matches found</p>
+                    <p className="text-yellow-700 text-sm">Try uploading a different image or adjust the photo angle</p>
                   </div>
                 )}
               </div>
@@ -281,23 +281,23 @@ export default function AIVisualSearch() {
 
             {/* Info */}
             {!previewImage && (
-              <div className="bg-[#3557C1] border border-gray-700 rounded-lg p-4">
-                <h4 className="text-white font-bold mb-2">How it works:</h4>
-                <ul className="text-gray-300 text-sm space-y-2">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h4 className="text-gray-900 font-bold mb-2">How it works:</h4>
+                <ul className="text-gray-700 text-sm space-y-2">
                   <li className="flex items-start gap-2">
-                    <span className="text-[#4169E1]">1.</span>
+                    <span className="text-[#4169E1] font-semibold">1.</span>
                     <span>Upload any photo of clothing, accessories, or home goods</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-[#4169E1]">2.</span>
+                    <span className="text-[#4169E1] font-semibold">2.</span>
                     <span>Our AI analyzes the image and identifies the items</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-[#4169E1]">3.</span>
+                    <span className="text-[#4169E1] font-semibold">3.</span>
                     <span>Find similar products instantly in our inventory</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-[#4169E1]">4.</span>
+                    <span className="text-[#4169E1] font-semibold">4.</span>
                     <span>Add to cart and checkout - all in seconds!</span>
                   </li>
                 </ul>
