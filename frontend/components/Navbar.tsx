@@ -40,7 +40,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-gradient-to-r from-gray-50 to-white border-b-2 border-[#4169E1] shadow-lg sticky top-0 z-50">
+    <nav className="bg-gradient-to-r from-gray-50 to-white shadow-lg sticky top-0 z-50">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center gap-10">
@@ -67,10 +67,10 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex md:gap-7 ml-40">
+            <div className="hidden md:flex md:gap-5 ml-40">
               <Link
                 href="/products"
-                className={`px-5 py-3 rounded-xl text-md font-semibold transition-all ${
+                className={`px-5 py-3 rounded-xl text-md transition-all ${
                   pathname === "/products"
                     ? "bg-[#4169E1] text-white shadow-lg transform scale-105"
                     : "bg-white text-gray-800 hover:bg-[#4169E1] hover:text-white border-2 border-gray-200 hover:border-[#4169E1] shadow-md hover:shadow-lg"
@@ -80,7 +80,7 @@ export default function Navbar() {
               </Link>
               <Link
                 href="/cart"
-                className={`px-5 py-3 rounded-xl text-md font-semibold transition-all ${
+                className={`px-5 py-3 rounded-xl text-md transition-all ${
                   pathname === "/cart"
                     ? "bg-[#4169E1] text-white shadow-lg transform scale-105"
                     : "bg-white text-gray-800 hover:bg-[#4169E1] hover:text-white border-2 border-gray-200 hover:border-[#4169E1] shadow-md hover:shadow-lg"
@@ -90,7 +90,7 @@ export default function Navbar() {
               </Link>
               <Link
                 href="/history"
-                className={`px-5 py-3 rounded-xl text-md font-semibold transition-all ${
+                className={`px-5 py-3 rounded-xl text-md transition-all ${
                   pathname === "/history"
                     ? "bg-[#4169E1] text-white shadow-lg transform scale-105"
                     : "bg-white text-gray-800 hover:bg-[#4169E1] hover:text-white border-2 border-gray-200 hover:border-[#4169E1] shadow-md hover:shadow-lg"
