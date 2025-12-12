@@ -138,7 +138,7 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
       );
 
       // Store active stream for proper teardown
-      activeStreamRef.current = codeReader.stream;
+      activeStreamRef.current = (videoRef.current?.srcObject as MediaStream) || null;
 
       console.log('Barcode scanner started successfully');
       toast.success('Camera scanner started! Point at a barcode.');
