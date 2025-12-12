@@ -40,9 +40,9 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-gradient-to-r from-blue-50 to-cyan-50 border-b-2 border-[#4169E1] shadow-lg sticky top-0 z-50">
-      <div className="max-w-[1300] mx-auto px-8 sm:px-10 lg:px-16">
-        <div className="flex justify-between h-25">
+    <nav className="bg-gradient-to-r from-gray-50 to-white border-b-2 border-[#4169E1] shadow-lg sticky top-0 z-50">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12">
+        <div className="flex justify-between items-center h-20">
           <div className="flex items-center gap-10">
             {/* Logo - Clickable Home Link */}
             <Link
@@ -56,11 +56,11 @@ export default function Navbar() {
                     alt="SmartScan Pro Logo"
                     width={100}
                     height={100}
-                    className="rounded-xl shadow-lg group-hover:shadow-xl transition-shadow border-2 border-[#4169E1] ml-15"
+                    className="rounded-xl shadow-lg group-hover:shadow-xl transition-shadow border-2 border-[#4169E1] ml-4"
                     priority
                   />
                 </div>
-                <div className="text-sm text-bold-black-700 font-semibold">
+                <div className="text-sm text-gray-800 font-semibold">
                   Smart Shopping, Instant Checkout
                 </div>
               </div>
@@ -70,30 +70,30 @@ export default function Navbar() {
             <div className="hidden md:flex md:gap-4 md:ml-10">
               <Link
                 href="/products"
-                className={`px-5 py-3 rounded-xl text-md font- transition-all ${
+                className={`px-5 py-3 rounded-xl text-md font-semibold transition-all ${
                   pathname === "/products"
                     ? "bg-[#4169E1] text-white shadow-lg transform scale-105"
-                    : "bg-white text-black-700 hover:bg-[#4169E1] hover:text-white border-2 border-gray-200 hover:border-[#4169E1] shadow-md hover:shadow-lg"
+                    : "bg-white text-gray-800 hover:bg-[#4169E1] hover:text-white border-2 border-gray-200 hover:border-[#4169E1] shadow-md hover:shadow-lg"
                 }`}
               >
                 Browse products
               </Link>
               <Link
                 href="/cart"
-                className={`px-5 py-3 rounded-xl text-md font-transition-all ${
+                className={`px-5 py-3 rounded-xl text-md font-semibold transition-all ${
                   pathname === "/cart"
                     ? "bg-[#4169E1] text-white shadow-lg transform scale-105"
-                    : "bg-white text-black-700 hover:bg-[#4169E1] hover:text-white border-2 border-gray-200 hover:border-[#4169E1] shadow-md hover:shadow-lg"
+                    : "bg-white text-gray-800 hover:bg-[#4169E1] hover:text-white border-2 border-gray-200 hover:border-[#4169E1] shadow-md hover:shadow-lg"
                 }`}
               >
                 Cart
               </Link>
               <Link
                 href="/history"
-                className={`px-5 py-3 rounded-xl text-md font-transition-all ${
+                className={`px-5 py-3 rounded-xl text-md font-semibold transition-all ${
                   pathname === "/history"
                     ? "bg-[#4169E1] text-white shadow-lg transform scale-105"
-                    : "bg-white text-black-700 hover:bg-[#4169E1] hover:text-white border-2 border-gray-200 hover:border-[#4169E1] shadow-md hover:shadow-lg"
+                    : "bg-white text-gray-800 hover:bg-[#4169E1] hover:text-white border-2 border-gray-200 hover:border-[#4169E1] shadow-md hover:shadow-lg"
                 }`}
               >
                 History
@@ -101,7 +101,7 @@ export default function Navbar() {
               {isAdmin && (
                 <Link
                   href="/admin/home"
-                  className={`px-8 py-3 rounded-xl text-lg font-transition-all ${
+                  className={`px-8 py-3 rounded-xl text-lg font-semibold transition-all ${
                     pathname === "/admin/products"
                       ? "bg-[#4169E1] text-white shadow-lg transform scale-105"
                       : "bg-white text-gray-700 hover:bg-[#4169E1] hover:text-white border-2 border-gray-200 hover:border-[#4169E1] shadow-md hover:shadow-lg"
