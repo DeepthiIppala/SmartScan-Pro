@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { BrowserMultiFormatReader } from '@zxing/library';
+import { BrowserMultiFormatReader, Result } from '@zxing/browser';
 import { DecodeHintType, BarcodeFormat } from '@zxing/library';
 import toast from 'react-hot-toast';
 
@@ -18,7 +18,7 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
   const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasCalledOnScanRef = useRef(false);
   const isScanningActiveRef = useRef(false);
-  const controlsRef = useRef<{ stop: () => void } | null>(null);
+  const activeStreamRef = useRef<MediaStream | null>(null);
 
   const playBeep = () => {
     try {
@@ -88,82 +88,81 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
       const codeReader = new BrowserMultiFormatReader(hints);
       codeReaderRef.current = codeReader;
 
-      console.log('Requesting camera access...');
-      const controls = await codeReader.decodeFromVideoDevice(
-        undefined, // Use default camera
+      console.log('Requesting camera access (preferring back camera)...');
+      const constraints: MediaTrackConstraints = {
+        facingMode: { ideal: 'environment' },
+      };
+
+      await codeReader.decodeFromConstraints(
+        {
+          audio: false,
+          video: constraints,
+        },
         videoRef.current,
-        (result, error) => {
-          // Log scanning attempts for debugging
+        (result: Result | undefined, error: unknown) => {
           if (error) {
-            // Don't log NotFoundException - it's normal when no barcode is visible
-            if (error.name !== 'NotFoundException') {
+            const err = error as { name?: string };
+            // NotFoundException happens frequently while scanning; ignore it
+            if (err?.name && err.name !== 'NotFoundException') {
               console.error('Barcode scanning error:', error);
             }
             return;
           }
 
-          // Check if scanning is still active
-          if (!isScanningActiveRef.current) {
+          if (!isScanningActiveRef.current || !result) {
             return;
           }
 
-          if (result) {
-            const barcode = result.getText();
-            console.log('Barcode detected:', barcode);
+          const barcode = result.getText();
+          console.log('Barcode detected:', barcode);
 
-            // Quadruple protection against duplicates
-            if (lastScannedRef.current === barcode || hasCalledOnScanRef.current || !isScanningActiveRef.current) {
-              return;
-            }
-
-            // Mark this barcode as scanned (but keep scanner running)
-            hasCalledOnScanRef.current = true;
-            lastScannedRef.current = barcode;
-
-            // Play beep sound
-            playBeep();
-
-            // Call the onScan callback ONCE (removed toast from here)
-            onScan(barcode);
-
-            // Clear previous timeout if exists
-            if (scanTimeoutRef.current) {
-              clearTimeout(scanTimeoutRef.current);
-            }
-
-            // Reset after 2 seconds to allow rescanning or scanning different items
-            scanTimeoutRef.current = setTimeout(() => {
-              lastScannedRef.current = null;
-              hasCalledOnScanRef.current = false;
-            }, 2000);
+          if (lastScannedRef.current === barcode || hasCalledOnScanRef.current) {
+            return;
           }
+
+          hasCalledOnScanRef.current = true;
+          lastScannedRef.current = barcode;
+
+          playBeep();
+          onScan(barcode);
+
+          if (scanTimeoutRef.current) {
+            clearTimeout(scanTimeoutRef.current);
+          }
+
+          scanTimeoutRef.current = setTimeout(() => {
+            lastScannedRef.current = null;
+            hasCalledOnScanRef.current = false;
+          }, 2000);
         }
       );
 
-      // Store controls to stop scanning later
-      controlsRef.current = controls;
+      // Store active stream for proper teardown
+      activeStreamRef.current = codeReader.stream;
+
       console.log('Barcode scanner started successfully');
       toast.success('Camera scanner started! Point at a barcode.');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { name?: string; message?: string };
       console.error('Failed to start scanner:', error);
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
+      console.error('Error name:', err.name);
+      console.error('Error message:', err.message);
 
       // Provide specific error messages
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         toast.error('Camera access denied. Please allow camera permissions in your browser settings.');
-      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
         toast.error('No camera found on this device.');
-      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
         toast.error('Camera is already in use by another application.');
-      } else if (error.name === 'OverconstrainedError') {
+      } else if (err.name === 'OverconstrainedError') {
         toast.error('Camera constraints cannot be satisfied.');
-      } else if (error.message?.includes('https') || error.message?.includes('secure')) {
+      } else if (err.message?.includes('https') || err.message?.includes('secure')) {
         toast.error('Camera requires HTTPS connection. Please use https:// or localhost.');
-      } else if (error.message?.includes('getUserMedia')) {
+      } else if (err.message?.includes('getUserMedia')) {
         toast.error('Camera access not supported. Please use HTTPS or localhost, or try a different browser.');
       } else {
-        toast.error(`Failed to start camera: ${error.message || 'Unknown error'}`);
+        toast.error(`Failed to start camera: ${err.message || 'Unknown error'}`);
       }
 
       setIsScanning(false);
@@ -174,16 +173,6 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
   const stopScanner = () => {
     // IMMEDIATELY disable scanning
     isScanningActiveRef.current = false;
-
-    // Stop using controls if available
-    if (controlsRef.current) {
-      try {
-        controlsRef.current.stop();
-        controlsRef.current = null;
-      } catch (error) {
-        console.error('Error stopping controls:', error);
-      }
-    }
 
     // Stop the video stream
     const videoElement = videoRef.current;
@@ -197,8 +186,26 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
       }
     }
 
-    // Clear the code reader reference
-    codeReaderRef.current = null;
+    // Also stop reader-held stream if present
+    if (activeStreamRef.current) {
+      try {
+        activeStreamRef.current.getTracks().forEach(track => track.stop());
+      } catch (error) {
+        console.error('Error stopping active stream:', error);
+      } finally {
+        activeStreamRef.current = null;
+      }
+    }
+
+    if (codeReaderRef.current) {
+      try {
+        codeReaderRef.current.reset();
+      } catch (error) {
+        console.error('Error resetting code reader:', error);
+      }
+      codeReaderRef.current = null;
+    }
+
     setIsScanning(false);
   };
 
@@ -218,17 +225,7 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
       }
 
       // Cleanup video stream
-      if (codeReaderRef.current) {
-        try {
-          const videoElement = videoRef.current;
-          if (videoElement && videoElement.srcObject) {
-            const stream = videoElement.srcObject as MediaStream;
-            stream.getTracks().forEach(track => track.stop());
-          }
-        } catch (err) {
-          console.log('Scanner cleanup error:', err);
-        }
-      }
+      stopScanner();
     };
   }, []);
 
