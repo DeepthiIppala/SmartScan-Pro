@@ -3,6 +3,8 @@
 export interface User {
   id: number;
   email: string;
+  first_name?: string;
+  last_name?: string;
   is_admin: boolean;
 }
 
@@ -11,6 +13,9 @@ export interface Product {
   barcode: string;
   name: string;
   price: number;
+  category?: string;
+  description?: string;
+  image_url?: string;
 }
 
 export interface CartItem {
@@ -56,6 +61,8 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface AuthResponse {

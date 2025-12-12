@@ -70,13 +70,18 @@ async function apiFetch<T>(
 
 // Auth API
 export const authAPI = {
-  async register(email: string, password: string): Promise<AuthResponse> {
+  async register(email: string, password: string, firstName?: string, lastName?: string): Promise<AuthResponse> {
     const data = await apiFetch<AuthResponse>("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({
+        email,
+        password,
+        first_name: firstName,
+        last_name: lastName
+      }),
     });
 
-    // Store token in localStorage
+    // Store token in localStorage if provided (for backwards compatibility)
     if (data.access_token) {
       localStorage.setItem("access_token", data.access_token);
     }
@@ -120,6 +125,28 @@ export const authAPI = {
         method: "GET",
       },
       true
+    );
+  },
+
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    return apiFetch<{ message: string }>(
+      "/auth/forgot-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      },
+      false
+    );
+  },
+
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    return apiFetch<{ message: string }>(
+      "/auth/reset-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ token, new_password: newPassword }),
+      },
+      false
     );
   },
 };
