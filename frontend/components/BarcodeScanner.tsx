@@ -198,11 +198,6 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
     }
 
     if (codeReaderRef.current) {
-      try {
-        codeReaderRef.current.reset();
-      } catch (error) {
-        console.error('Error resetting code reader:', error);
-      }
       codeReaderRef.current = null;
     }
 
