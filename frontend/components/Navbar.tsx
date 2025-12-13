@@ -100,9 +100,9 @@ export default function Navbar() {
               </Link>
               {isAdmin && (
                 <Link
-                  href="/admin/home"
-                  className={`px-8 py-3 rounded-xl text-lg font-semibold transition-all ${
-                    pathname === "/admin/products"
+                  href="/admin/verify-exit-pass"
+                  className={`px-6 py-2.5 rounded-xl text-lg font-semibold transition-all ${
+                    pathname?.startsWith("/admin")
                       ? "bg-[#4169E1] text-white shadow-lg transform scale-105"
                       : "bg-white text-gray-700 hover:bg-[#4169E1] hover:text-white border-2 border-gray-200 hover:border-[#4169E1] shadow-md hover:shadow-lg"
                   }`}
@@ -369,10 +369,10 @@ export default function Navbar() {
             </Link>
             {isAdmin && (
               <Link
-                href="/admin/home"
+                href="/admin/verify-exit-pass"
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block px-4 py-3 rounded-xl text-base font-bold transition-all ${
-                  pathname === "/admin/products"
+                  pathname?.startsWith("/admin")
                     ? "bg-[#4169E1] text-white shadow-lg"
                     : "bg-white text-gray-700 hover:bg-[#4169E1] hover:text-white border-2 border-gray-200 shadow-md"
                 }`}

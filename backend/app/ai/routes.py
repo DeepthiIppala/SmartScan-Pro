@@ -80,7 +80,7 @@ def visual_search():
                 "id": p.id,
                 "name": p.name,
                 "price": p.price,
-                "category": p.category,
+                "category": p.category or "General",
                 "barcode": p.barcode
             }
             for p in products
@@ -96,16 +96,28 @@ def visual_search():
 
         search_results = json.loads(result)
 
-        # Enrich matches with full product data
+        # Enrich matches with full product data (prefer strict matching by id/barcode)
         if 'matches' in search_results:
             enriched_matches = []
             for match in search_results['matches']:
-                # Find the actual product
-                product = next(
-                    (p for p in products if p.name == match['product_name']),
-                    None
-                )
+                product = None
+                match_id = match.get("product_id")
+                match_barcode = match.get("barcode")
+                match_name = match.get("product_name")
+
+                if match_id is not None:
+                    product = next((p for p in products if p.id == match_id), None)
+                if not product and match_barcode:
+                    product = next((p for p in products if p.barcode == match_barcode), None)
+                if not product and match_name:
+                    # Fallback to case-insensitive name match
+                    product = next((p for p in products if p.name.lower() == match_name.lower()), None)
+
                 if product:
+                    confidence = float(match.get('confidence', 0) or 0)
+                    # Drop very low confidence noise
+                    if confidence < 0.35:
+                        continue
                     enriched_matches.append({
                         "id": product.id,
                         "name": product.name,
@@ -113,8 +125,9 @@ def visual_search():
                         "category": product.category,
                         "barcode": product.barcode,
                         "match_reason": match.get('match_reason', ''),
-                        "confidence": match.get('confidence', 0.0)
+                        "confidence": confidence
                     })
+
             # Return as 'products' to match frontend expectation
             search_results['products'] = enriched_matches
             search_results['matches'] = len(enriched_matches)  # Count of matches
@@ -194,8 +207,21 @@ def get_recommendations():
                     "price": item.product.price
                 })
 
+        # Build available products list for grounded recommendations
+        products = Product.query.all()
+        available_products = [
+            {
+                "id": p.id,
+                "name": p.name,
+                "price": p.price,
+                "category": p.category or "General",
+                "barcode": p.barcode
+            }
+            for p in products
+        ]
+
         # Generate recommendations
-        result = ai_service.generate_recommendations(history_summary, current_cart_items)
+        result = ai_service.generate_recommendations(history_summary, current_cart_items, available_products)
 
         # Parse JSON response
         try:
@@ -204,8 +230,49 @@ def get_recommendations():
             elif '```' in result:
                 result = result.split('```')[1].split('```')[0].strip()
 
-            recommendations = json.loads(result)
-            return jsonify(recommendations), 200
+            parsed = json.loads(result)
+            raw_recs = parsed.get("recommendations", []) if isinstance(parsed, dict) else []
+
+            enriched_recs = []
+            for rec in raw_recs:
+                name = rec.get("product") or rec.get("product_name")
+                reason = rec.get("reason", "")
+                product = None
+
+                # Prefer id-based matching
+                rec_id = rec.get("product_id")
+                if rec_id is not None:
+                    try:
+                        rec_id_int = int(rec_id)
+                        product = next((p for p in products if p.id == rec_id_int), None)
+                    except (TypeError, ValueError):
+                        product = None
+
+                # Fallback to barcode
+                if not product:
+                    barcode = rec.get("barcode")
+                    if barcode:
+                        product = next((p for p in products if str(p.barcode) == str(barcode)), None)
+
+                # Fallback to name match
+                if not product and name:
+                    product = next((p for p in products if p.name.lower() == name.lower()), None)
+
+                if product:
+                    enriched_recs.append({
+                        "product": {
+                            "id": product.id,
+                            "name": product.name,
+                            "price": product.price,
+                            "category": product.category,
+                            "barcode": product.barcode,
+                            "description": getattr(product, "description", None),
+                            "image_url": getattr(product, "image_url", None)
+                        },
+                        "reason": reason
+                    })
+
+            return jsonify({"recommendations": enriched_recs}), 200
 
         except json.JSONDecodeError:
             return jsonify({"recommendations": [], "error": "Failed to parse recommendations"}), 200

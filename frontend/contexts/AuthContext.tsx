@@ -52,7 +52,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authAPI.login(email, password);
       setUser(response.user);
-      router.push('/home');
+
+      // Route admins to their console, customers to home
+      if (response.user.is_admin) {
+        router.push('/admin/verify-exit-pass');
+      } else {
+        router.push('/home');
+      }
     } catch (error) {
       throw error;
     }

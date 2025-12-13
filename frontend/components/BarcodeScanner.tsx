@@ -7,9 +7,17 @@ import toast from 'react-hot-toast';
 
 interface BarcodeScannerProps {
   onScan: (barcode: string) => void;
+  manualLabel?: string;
+  manualPlaceholder?: string;
+  manualButtonText?: string;
 }
 
-export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
+export default function BarcodeScanner({
+  onScan,
+  manualLabel = 'Enter Barcode',
+  manualPlaceholder = 'Type barcode number',
+  manualButtonText = 'Add',
+}: BarcodeScannerProps) {
   const [manualBarcode, setManualBarcode] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -228,11 +236,11 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
     <div>
       {/* Manual Input */}
       <form onSubmit={handleManualSubmit} className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Enter Barcode</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">{manualLabel}</label>
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Type barcode number"
+            placeholder={manualPlaceholder}
             value={manualBarcode}
             onChange={(e) => setManualBarcode(e.target.value)}
             className="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-900 placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4169E1] focus:border-[#4169E1] transition-all"
@@ -241,7 +249,7 @@ export default function BarcodeScanner({ onScan }: BarcodeScannerProps) {
             type="submit"
             className="px-6 py-2.5 bg-[#4169E1] text-white font-medium rounded-lg hover:bg-[#3557C1] focus:outline-none focus:ring-2 focus:ring-gray-700 transition-all"
           >
-            Add
+            {manualButtonText}
           </button>
         </div>
       </form>

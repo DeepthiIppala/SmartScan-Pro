@@ -5,9 +5,12 @@ import { api } from '@/lib/api';
 import { Product } from '@/lib/types';
 import toast from 'react-hot-toast';
 
+type RecommendationEntry = { product: Product; reason?: string };
+
 export default function AIRecommendations() {
-  const [recommendations, setRecommendations] = useState<Product[]>([]);
+  const [recommendations, setRecommendations] = useState<RecommendationEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [addingId, setAddingId] = useState<number | null>(null);
   const [showRecommendations, setShowRecommendations] = useState(false);
 
   const loadRecommendations = async () => {
@@ -31,13 +34,13 @@ export default function AIRecommendations() {
   };
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-6 mb-6 border border-[#4169E1]">
+    <div className="bg-white rounded-xl p-6 mb-6 ">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-r from-[#4169E1] to-[#3557C1] p-2 rounded-lg">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-500 p-2 rounded-lg shadow-md">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-black"
+              className="h-6 w-6 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -51,7 +54,7 @@ export default function AIRecommendations() {
             </svg>
           </div>
           <div>
-            <h3 className="text-lg font-bold text-black">AI-Powered Recommendations</h3>
+            <h3 className="text-lg font-bold text-black">AI Recommendations</h3>
             <p className="text-sm text-black-300">Personalized product suggestions based on your shopping history</p>
           </div>
         </div>
@@ -60,7 +63,7 @@ export default function AIRecommendations() {
           <button
             onClick={loadRecommendations}
             disabled={loading}
-            className="bg-gradient-to-r from-[#4169E1] to-[#3557C1] hover:from-[#3557C1] hover:to-[#2A47A8] text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="bg-gradient-to-r from-blue-500 to-blue-500 hover:from-indigo-400 hover:to-blue-400 text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-indigo-900/40"
           >
             {loading ? (
               <>
@@ -92,21 +95,41 @@ export default function AIRecommendations() {
 
       {showRecommendations && recommendations.length > 0 && (
         <div className="space-y-3 mt-4">
-          {recommendations.map((product, index) => (
+          {recommendations.map((rec, index) => (
             <div
-              key={product.id}
-              className="bg-[#4169E1] rounded-lg p-4 shadow-sm border border-[#4169E1] hover:shadow-md transition-shadow"
+              key={rec.product.id}
+              className="bg-white rounded-lg p-4 shadow-md border border-slate-700 hover:shadow-lg transition-shadow"
             >
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-[#4169E1] to-[#3557C1] rounded-full flex items-center justify-center text-white font-bold">
+                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-500 rounded-full flex items-center justify-center text-black font-bold shadow">
                   {index + 1}
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-white mb-1">{product.name}</h4>
-                  <p className="text-sm text-gray-300">${product.price.toFixed(2)}</p>
+                  <h4 className="font-semibold text-black mb-1">{rec.product.name}</h4>
+                  <p className="text-sm text-black-200">${rec.product.price.toFixed(2)}</p>
+                  {rec.reason && <p className="text-xs text-black-200 mt-1">Why: {rec.reason}</p>}
                 </div>
-                <button className="text-indigo-400 hover:text-indigo-300 font-medium text-sm">
-                  Add to Cart
+                <button
+                  onClick={async () => {
+                    if (!rec.product.barcode) {
+                      toast.error('Product barcode missing; cannot add to cart.');
+                      return;
+                    }
+                    setAddingId(rec.product.id);
+                    try {
+                      await api.cart.addItem(rec.product.barcode, 1);
+                      toast.success(`${rec.product.name} added to cart`);
+                    } catch (err) {
+                      const message = err instanceof Error ? err.message : 'Failed to add item';
+                      toast.error(message);
+                    } finally {
+                      setAddingId(null);
+                    }
+                  }}
+                  disabled={addingId === rec.product.id}
+                  className="text-blue-600 hover:text-blue-800 font-semibold text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {addingId === rec.product.id ? 'Adding...' : 'Add to Cart'}
                 </button>
               </div>
             </div>
@@ -114,7 +137,7 @@ export default function AIRecommendations() {
 
           <button
             onClick={() => setShowRecommendations(false)}
-            className="w-full text-sm text-gray-300 hover:text-white py-2"
+            className="w-full text-sm text-black-300 hover:text-black py-2"
           >
             Hide Recommendations
           </button>

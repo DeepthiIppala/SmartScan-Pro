@@ -1,5 +1,5 @@
 // API client for Flask backend
-import { User, Product, Cart, Transaction, AuthResponse } from "./types";
+import { User, Product, Cart, Transaction, AuthResponse, ExitPassVerification } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000/api";
 
@@ -278,6 +278,17 @@ export const transactionsAPI = {
       true
     );
   },
+
+  async verifyExitPass(qrData: string): Promise<ExitPassVerification> {
+    return apiFetch<ExitPassVerification>(
+      "/transactions/verify-exit-pass",
+      {
+        method: "POST",
+        body: JSON.stringify({ qr_data: qrData }),
+      },
+      true
+    );
+  },
 };
 
 // Define types for AI responses
@@ -295,7 +306,7 @@ interface AIChatResponse {
 }
 
 interface AIRecommendationsResponse {
-  recommendations: Product[];
+  recommendations: Array<{ product: Product; reason?: string }>;
 }
 
 interface FraudCheckResponse {

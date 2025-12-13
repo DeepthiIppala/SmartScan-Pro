@@ -52,6 +52,16 @@ export interface Transaction {
   audit_reason?: string;
 }
 
+export interface ExitPassVerification extends Transaction {
+  verified?: boolean;
+  customer?: {
+    id: number;
+    email: string;
+    first_name?: string;
+    last_name?: string;
+  };
+}
+
 // API Request/Response types
 export interface LoginRequest {
   email: string;
