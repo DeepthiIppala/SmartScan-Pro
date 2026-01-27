@@ -1,0 +1,45 @@
+# Ignore IDE and AI-specific folders
+.claude/
+
+# Ignore local asset folders
+Product images/
+
+# Ignore specific files
+# Ignore all .md files except README.md
+*.md
+!README.md
+bash.exe.stackdump
+
+# Environment files
+.env
+.env.local
+*.env
+
+# Backend Python
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/**/*.pyc
+backend/instance/
+backend/*.db
+backend/*.sqlite
+
+# Frontend Node
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.vercel
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
